@@ -200,7 +200,7 @@ class LoRaMAC():
             if len(self._device.downlinkPhyPayload) == 0 :
                 continue
             self.__lorawan_message_type()
-            self._logger.debug(f"Downlink : {self._device.message_type}")
+            self._logger.debug(f"DOWN: {self._device.message_type}, PHYPAYLOAD = {self._device.downlinkPhyPayload}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
@@ -274,7 +274,7 @@ class LoRaMAC():
         self._LoRa.beginPacket()
         self._LoRa.write(list(self._device.uplinkPhyPayload), len(self._device.uplinkPhyPayload))
         self._LoRa.endPacket()
-        self._logger.debug(f"Uplink : PHY = {self._device.uplinkPhyPayload.hex()}")
+        self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
         return self._LoRa.wait(delay)
 
     def __radio_receive(self, delay:int)-> bytes:

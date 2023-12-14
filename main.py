@@ -5,10 +5,14 @@ from LoRaMAC import JoinStatus, TransmitStatus, ReceiveStatus
 
 import time
 import logging
-
+device : Device = None
 
 def on_join(status:JoinStatus):
 	print(status)
+	if status == JoinStatus.JOIN_OK:
+		print(device.to_dict())
+	if status == JoinStatus.JOIN_MAX_TRY_ERROR:
+		print(device.to_dict())
 
 def on_transmit(status:TransmitStatus):
 	print(status)
