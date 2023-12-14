@@ -127,6 +127,7 @@ class LoRaMAC():
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         
         self._LoRaSemaphore.acquire()
+        self._logger.debug(f"Transmitting...")
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
             # Transmit ok
