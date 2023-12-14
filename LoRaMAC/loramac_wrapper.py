@@ -103,7 +103,7 @@ class WrapperLoRaMAC :
         FHDR_FCtrl_data = FHDR_FCtrl_t((),FHDR_FCtrl_uplink_data)
         FOpts = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_MAX_FOPTS_LEN)()
 
-        FHDR_data = FHDR_t(int(DevAddr, 16), FHDR_FCtrl_data, FCnt, FOpts)
+        FHDR_data = FHDR_t(int(DevAddr.hex(), 16), FHDR_FCtrl_data, FCnt, FOpts)
 
         mac = MACPayload_t(FHDR_data, nwkSKey, appSKey, FPort, len(payload), payload)
         buffer = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_BUFFER_SIZE_MAX)()
@@ -130,7 +130,7 @@ class WrapperLoRaMAC :
         FHDR_FCtrl_data = FHDR_FCtrl_t((),FHDR_FCtrl_uplink_data)
         FOpts = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_MAX_FOPTS_LEN)()
 
-        FHDR_data = FHDR_t(int(DevAddr, 16), FHDR_FCtrl_data, FCnt, FOpts)
+        FHDR_data = FHDR_t(int(DevAddr.hex(), 16), FHDR_FCtrl_data, FCnt, FOpts)
 
         mac = MACPayload_t(FHDR_data, nwkSKey, appSKey, FPort, len(payload), payload)
         buffer = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_BUFFER_SIZE_MAX)()

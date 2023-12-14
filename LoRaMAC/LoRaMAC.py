@@ -335,7 +335,8 @@ class LoRaMAC():
         return True
     def __lorawan_data_down(self) -> bool:
         DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
-        if int(DevAddr.reverse(), 16) != int(self._device.DevAddr, 16):
+        DevAddr.reverse()
+        if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
             self._logger.debug(f"LoRaWAN : DataDown DevAddr Mismatching")
             return False
         
