@@ -31,7 +31,7 @@ if __name__ == "__main__":
 	LoRaWAN = LoRaMAC(device, Region.US915)
 	LoRaWAN.set_logging_level(logging.DEBUG)
 	LoRaWAN.set_callback(on_join, on_transmit, on_receive)
-	LoRaWAN.join()
+	LoRaWAN.join(max_tries=3, forced=True)
 	while True:
 		if LoRaWAN.is_joined():
 			LoRaWAN.transmit(bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x07, 0x08, 0x09]), True)

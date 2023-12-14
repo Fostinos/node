@@ -147,8 +147,8 @@ class Database():
             if DevEUI == None:
                 print(COLOR.FAIL+"DevEUI can't be none"+COLOR.END)
                 return False
-            if FCnt <= 0 or FCnt >= 65536:
-                print(COLOR.FAIL+"FCnt must be between 1 and 65535"+COLOR.END)
+            if FCnt < 0 or FCnt > 65536:
+                print(COLOR.FAIL+"FCnt must be between 0 and 65535"+COLOR.END)
                 return False
             query = UPDATE_DEVICE_QUERY + "FCnt = ? " \
                                         + "WHERE DevEUI = ?"
