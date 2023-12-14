@@ -127,7 +127,6 @@ class LoRaMAC():
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         
         self._LoRaSemaphore.acquire()
-        self._logger.debug(f"Transmitting...")
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
             # Transmit ok
@@ -147,7 +146,7 @@ class LoRaMAC():
     def transmit(self, payload:bytes, confirmed:bool=False):
         self._device.uplinkMacPayload = payload
         if not self._device.isJoined:
-            self._logger.debug(f"Transmit : join error")
+            self._logger.debug(f"Uplink : join error")
             if callable(self._on_transmit):
                 self._on_transmit(TransmitStatus.TX_JOIN_ERROR)
             return
@@ -201,7 +200,7 @@ class LoRaMAC():
             if len(self._device.downlinkPhyPayload) == 0 :
                 continue
             self.__lorawan_message_type()
-            self._logger.debug(f"DOWNLINK PHYPAYLOAD: {self._device.downlinkPhyPayload} {self._device.message_type}")
+            self._logger.debug(f"Downlink : {self._device.message_type}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
@@ -305,7 +304,7 @@ class LoRaMAC():
         self._device.NwkSKey = bytes(response["NwkSKey"])
         self._device.NwkSKey = bytes(response["AppSKey"])
         self._device.isJoined = True
-        self._device.FCnt = 1
+        self._device.FCnt = 0
         self._db.open()
         self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
                                      self._device.NwkSKey.hex(), self._device.AppSKey.hex())
