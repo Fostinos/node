@@ -65,6 +65,7 @@ class LoRaMAC():
             self._device.set_device(device_dict)
         self._db.close()
         self._LoRaSemaphore = Semaphore()
+        self._LoRaSemaphore.release()
         self._thread = Thread(target=self.__background_task, name="LoRaMAC Service", daemon=True)
 
         self._LoRa.begin(RADIO_SPI_BUS_ID, RADIO_SPI_CS_ID, RADIO_RESET_PIN, RADIO_BUSY_PIN,
@@ -268,7 +269,7 @@ class LoRaMAC():
 
     def __radio_transmit(self, delay:int)-> bool:
         self._LoRa.beginPacket()
-        self._LoRa.write(self._device.uplinkPhyPayload, len(self._device.uplinkPhyPayload))
+        self._LoRa.write(list(self._device.uplinkPhyPayload), len(self._device.uplinkPhyPayload))
         self._LoRa.endPacket()
         return self._LoRa.wait(delay)
 
