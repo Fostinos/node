@@ -285,7 +285,7 @@ class LoRaMAC():
         return WrapperLoRaMAC.message_type(self._device.downlinkPhyPayload)
 
     def __lorawan_join_request(self) -> bool:
-        self._device.DevNonce = self._device.DevNonce + 1
+        self._device.DevNonce = random.randint(1, 65535)
         response = WrapperLoRaMAC.join_request(self._device.DevEUI, self._device.AppEUI, self._device.AppKey, self._device.DevNonce)
         self._db.open()
         self._db.update_dev_nonce(self._device.DevEUI.hex(), self._device.DevNonce)
