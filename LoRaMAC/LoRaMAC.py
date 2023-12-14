@@ -100,25 +100,27 @@ class LoRaMAC():
         self._on_receive = on_receive
         self._logger.debug(f"Callback functions setting")
 
-    def join(self, max_tries:int=1, forced:bool=False):
+    def join(self, max_tries:int=1, forced:bool=False)->bool:
         if max_tries > 0:
             self._device.join_max_tries = max_tries - 1
         else:
             self._logger.debug(f"Join max try error")
             if callable(self._on_join):
                 self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
+            return False
+        
         if not forced and self._device.isJoined:
             self._logger.debug(f"Already Joined")
             if callable(self._on_join):
                 self._on_join(JoinStatus.JOIN_OK)
-            return
+            return True
         
         self._logger.debug(f"Joining...")
         self._device.isJoined = False
         if not self.__lorawan_join_request():
             if callable(self._on_join):
                 self._on_join(JoinStatus.JOIN_REQUEST_ERROR)
-            return
+            return False
         
         if self._region == Region.EU868:
             self._channel = random.randint(self._region.value.UPLINK_CHANNEL_MIN, Region.EU868.value.JOIN_CHANNEL_MAX)
@@ -133,6 +135,7 @@ class LoRaMAC():
             self.__radio_rx1_mode()
             self._device.rx2_window_time = time.time() + JOIN_RX2_DELAY
             self._LoRaSemaphore.release()
+            return True
         else:
             # Transmit error
             self.__radio_rx2_mode()
@@ -141,21 +144,22 @@ class LoRaMAC():
                     self.join(self._device.join_max_tries)
             elif callable(self._on_join):
                 self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
+                return True
             
 
-    def transmit(self, payload:bytes, confirmed:bool=False):
+    def transmit(self, payload:bytes, confirmed:bool=False)->bool:
         self._device.uplinkMacPayload = payload
         if not self._device.isJoined:
             self._logger.debug(f"Uplink : join error")
             if callable(self._on_transmit):
                 self._on_transmit(TransmitStatus.TX_JOIN_ERROR)
-            return
+            return False
         
         self._logger.debug(f"Transmitting...")
         if not self.__lorawan_data_up(confirmed):
             if callable(self._on_transmit):
                 self._on_transmit(TransmitStatus.TX_PAYLOAD_ERROR)
-            return
+            return False
         
         self._channel = self.__random_channel()
         self._spreading_factor = self.__random_spreading_factor()
@@ -167,10 +171,12 @@ class LoRaMAC():
             self.__radio_rx1_mode()
             self._device.rx2_window_time = time.time() + UPLINK_RX2_DELAY
             self._LoRaSemaphore.release()
+            return True
         else:
             # Transmit error
             self.__radio_rx2_mode()
             self._LoRaSemaphore.release()
+            return False
     
     def set_logging_level(self, level=logging.INFO):
         self._logger.setLevel(level)
@@ -183,8 +189,8 @@ class LoRaMAC():
                 time.sleep(1)
                 continue
 
-            if time.time() >= self._device.rx2_window_time and self._device.rx2_window_time > 0:
-                self._device.rx2_window_time = 0
+            if self._device.rx2_window_time > 0 and time.time() >= self._device.rx2_window_time:
+                self._device.rx2_window_time = -1
                 self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
@@ -200,7 +206,7 @@ class LoRaMAC():
             if len(self._device.downlinkPhyPayload) == 0 :
                 continue
             self.__lorawan_message_type()
-            self._logger.debug(f"DOWN: {self._device.message_type}, PHYPAYLOAD = {self._device.downlinkPhyPayload}")
+            self._logger.debug(f"DOWN: {self._device.message_type}, PHYPAYLOAD = {self._device.downlinkPhyPayload.hex()}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
