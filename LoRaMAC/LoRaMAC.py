@@ -200,9 +200,9 @@ class LoRaMAC():
             self._LoRaSemaphore.release()
             if len(self._device.downlinkPhyPayload) == 0 :
                 continue
-            
-            self._device.message_type = self.__lorawan_message_type()
-            if self.__lorawan_message_type() == MessageType.JOIN_ACCEPT:
+            self.__lorawan_message_type()
+            self._logger.debug(f"DOWNLINK PHYPAYLOAD: {self._device.downlinkPhyPayload} {self._device.message_type}")
+            if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
                             self.join(self._device.join_max_tries)
@@ -281,8 +281,8 @@ class LoRaMAC():
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
-    def __lorawan_message_type(self) -> MessageType:
-        return WrapperLoRaMAC.message_type(self._device.downlinkPhyPayload)
+    def __lorawan_message_type(self):
+        self._device.message_type = WrapperLoRaMAC.message_type(self._device.downlinkPhyPayload)
 
     def __lorawan_join_request(self) -> bool:
         self._device.DevNonce = random.randint(1, 65535)
