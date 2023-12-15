@@ -309,6 +309,7 @@ class LoRaMAC():
             self.__radio_rx2_mode()
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
+            self._logger.error(f"Downlink {self._device.message_type}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if self._device.isJoined:
                     continue
