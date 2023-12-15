@@ -311,6 +311,8 @@ class LoRaMAC():
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if self._device.isJoined:
                     continue
+                self._device.rx2_window_time = -1
+                self._device.rx2_window_timeout = -1
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
                             self.join(self._device.join_max_tries)
