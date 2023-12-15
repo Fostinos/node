@@ -16,8 +16,9 @@ class TransmitStatus(Enum):
     Enumeration that represents different transmit status codes.
     """
     TX_OK               = 0
-    TX_JOIN_ERROR       = 1
-    TX_PAYLOAD_ERROR    = 2
+    TX_NETWORK_ACK      = 1
+    TX_JOIN_ERROR       = 2
+    TX_PAYLOAD_ERROR    = 3
 
 
 class ReceiveStatus(Enum):

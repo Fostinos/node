@@ -324,8 +324,11 @@ class LoRaMAC():
                 if not self.__lorawan_data_down():
                     if callable(self._on_receive):
                         self._on_receive(ReceiveStatus.RX_PAYLOAD_ERROR, bytes([]))
-                elif callable(self._on_receive):
-                    self._on_receive(ReceiveStatus.RX_OK, self._device.downlinkMacPayload)
+                else:
+                    if self._device.AckDown and callable(self._on_transmit):
+                        self._on_transmit(TransmitStatus.TX_NETWORK_ACK)
+                    if len(self._device.downlinkMacPayload) > 0 and callable(self._on_receive):
+                        self._on_receive(ReceiveStatus.RX_OK, self._device.downlinkMacPayload)
 
 
     def __increment_device_channel_group(self):
