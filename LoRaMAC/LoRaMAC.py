@@ -384,6 +384,7 @@ class LoRaMAC():
         
     def __radio_rx2_mode(self)-> bool:
         self._LoRa.setTx(self._LoRa.TX_SINGLE)
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
