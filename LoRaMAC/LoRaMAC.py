@@ -18,27 +18,46 @@ logging.getLogger("mysql.connector").setLevel(level=logging.ERROR)
 
 class LoRaMAC():
     """
-    LoRaMAC class is a LoRaWAN MAC layer implementation that provides functionalities for joining a network, transmitting data, and receiving data. It uses the SX126x LoRaRF library for communication with the LoRa radio module. The class also interacts with a SQLite database to store and retrieve device information.
+    The `LoRaMAC` class is a Python implementation of a LoRaWAN MAC layer. It provides methods for joining a LoRaWAN network, transmitting data, and receiving data. The class uses a LoRaRF library for low-level communication with the LoRa radio module.
 
     Note:
         Only LoRaWAN Class C device is implemented (can work with LoRaWAN Class A)
-    
+
     Example Usage:
-        device = Device(DevEUI, AppEUI, AppKey)\n
-        region = Region.US915\n
+        device  = Device(DevEUI, AppEUI, AppKey)\n
+        region  = Region.US915\n
         LoRaWAN = LoRaMAC(device, region)\n
         LoRaWAN.set_callback(on_join_callback, on_transmit_callback, on_receive_callback)\n
         LoRaWAN.join()\n
-        LoRaWAN.transmit(payload, confirmed=False)\n
-        LoRaWAN.set_logging_level(logging.INFO)\n
+        LoRaWAN.transmit(payload, confirmed=True)\n
+
+    Main functionalities:
+    - Joining a LoRaWAN network
+    - Transmitting data
+    - Receiving data
+
     Methods:
-        - __init__(self, device:Device, region:Region): Initializes the LoRaMAC object with a device and region.
-        - set_callback(self, on_join, on_transmit, on_receive): Sets the callback functions for the on_join, on_transmit, and on_receive events.
-        - join(self, nax_tries:int=1, forced:bool=False): Joins the LoRaWAN network by sending a join request.
-        - transmit(self, payload:bytes, confirmed:bool=False): Transmits data over the LoRaWAN network.
-        - set_logging_level(self, level=logging.INFO): Sets the logging level for the LoRaMAC object.
+    - __init__(self, device:Device, region:Region): Initializes the `LoRaMAC` object with a device and region.
+    - is_joined(self) -> bool: Returns whether the device has successfully joined the network.
+    - set_callback(self, on_join, on_transmit, on_receive): Sets the callback functions for join, transmit, and receive events.
+    - join(self, max_tries:int=1, forced:bool=False) -> bool: Joins the LoRaWAN network.
+    - transmit(self, payload:bytes, confirmed:bool=False) -> bool: Transmits data over the LoRaWAN network.
+    - set_logging_level(self, level=logging.INFO): Sets the logging level for the `LoRaMAC` object.
+
+    Fields:
+    - _device: The device object associated with the `LoRaMAC` object.
+    - _region: The region object associated with the `LoRaMAC` object.
+    - _on_join: Callback function for join event.
+    - _on_transmit: Callback function for transmit event.
+    - _on_receive: Callback function for receive event.
+    - _logger: Logger object for logging messages.
+    - _channel: Current channel for communication.
+    - _spreading_factor: Current spreading factor for communication.
+    - _LoRa: LoRaRF object for low-level communication with the LoRa radio module.
+    - _db: Database object for storing device information.
+    - _LoRaSemaphore: Semaphore object for thread synchronization.
+    - _thread: Thread object for running the background task.
     """
-    VERSION = "1.0.2"
     
     def __init__(self, device:Device, region:Region):
         self._device = device
@@ -46,7 +65,7 @@ class LoRaMAC():
         self._on_join = None
         self._on_transmit = None
         self._on_receive = None
-        self._logger = logging.getLogger("LAYER[LoRaMAC]")
+        self._logger = logging.getLogger("APP[LoRaMAC]")
         self._logger.setLevel(logging.DEBUG)
         self._channel = self._region.value.UPLINK_CHANNEL_MIN
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
@@ -74,11 +93,17 @@ class LoRaMAC():
         self._thread.start()
 
     def is_joined(self)->bool:
+        """
+        Returns a boolean value indicating whether the device has successfully joined the LoRaWAN network.
+    
+        Returns:
+            True if the device has joined the LoRaWAN network, False otherwise.
+        """
         return self._device.isJoined
 
     def set_callback(self, on_join, on_transmit, on_receive):
         """
-        Set the callback functions for the on_join, on_transmit, and on_receive events in the LoRaMAC class.
+        Set the callback functions for the on_join, on_transmit, and on_receive events in the `LoRaMAC` object.
 
         Args:
             on_join (function): A function that will be called when the device successfully joins the network.
@@ -89,11 +114,21 @@ class LoRaMAC():
             None
 
         Example Usage:
-            device = Device(DevEUI, AppEUI, AppKey)
-            region = Region.US915
-            loramac = LoRaMAC(device, region)
-            loramac.set_callback(on_join_callback, on_transmit_callback, on_receive_callback)
+            def on_join_callback(status:JoinStatus):\n
+                print(status)\n
 
+            def on_transmit_callback(status:TransmitStatus):
+                print(status)\n
+
+            def on_receive_callback(status:ReceiveStatus, payload:bytes):\n
+                print(status)\n
+                if status == ReceiveStatus.RX_OK:\n
+                    print("Data received = ", payload)\n
+            
+            device  = Device(DevEUI, AppEUI, AppKey)\n
+            region  = Region.US915\n
+            LoRaWAN = LoRaMAC(device, region)\n
+            LoRaWAN.set_callback(on_join_callback, on_transmit_callback, on_receive_callback)\n
         """
         self._on_join = on_join
         self._on_transmit = on_transmit
@@ -101,6 +136,23 @@ class LoRaMAC():
         self._logger.debug(f"Callback functions setting")
 
     def join(self, max_tries:int=1, forced:bool=False)->bool:
+        """
+        Join the network.
+
+        Args:
+            max_tries (int): The maximum number of join attempts. Default is 1.
+            forced (bool): Whether to force the join process. Default is False.
+
+        Returns:
+            bool: True if the join process started, False otherwise.
+
+        Example Usage:
+            device  = Device(DevEUI, AppEUI, AppKey)\n
+            region  = Region.US915\n
+            LoRaWAN = LoRaMAC(device, region)\n
+            joining = LoRaWAN.join(max_tries=3, forced=True)\n
+
+        """
         if max_tries > 0:
             self._device.join_max_tries = max_tries - 1
         else:
@@ -148,6 +200,16 @@ class LoRaMAC():
             
 
     def transmit(self, payload:bytes, confirmed:bool=False)->bool:
+        """
+        Transmits data over the LoRaWAN network.
+
+        Args:
+            payload (bytes): The data to be transmitted as a byte array.
+            confirmed (bool, optional): Whether the transmission should be confirmed by the network. Default is False.
+
+        Returns:
+            bool: True if the transmission process started, False otherwise.
+        """
         self._device.uplinkMacPayload = payload
         if not self._device.isJoined:
             self._logger.debug(f"Uplink : join error")
@@ -178,7 +240,16 @@ class LoRaMAC():
             self._LoRaSemaphore.release()
             return False
     
-    def set_logging_level(self, level=logging.INFO):
+    def set_logging_level(self, level:int=logging.INFO):
+        """
+        Sets the logging level for the `LoRaMAC`.
+
+        Args:
+            level (int): The logging level to be set. Default is logging.INFO.
+
+        Returns:
+            None
+        """
         self._logger.setLevel(level)
 
 
@@ -290,74 +361,96 @@ class LoRaMAC():
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
-    def __lorawan_message_type(self):
-        self._device.message_type = WrapperLoRaMAC.message_type(self._device.downlinkPhyPayload)
+    def __lorawan_message_type(self)->bool:
+        try:
+            self._device.message_type = WrapperLoRaMAC.message_type(self._device.downlinkPhyPayload)
+            return True
+        except:
+            self._device.message_type = MessageType.PROPRIETARY
+            self._logger.error(f"LoRaWAN : Message Type")
+            return False
 
     def __lorawan_join_request(self) -> bool:
-        self._device.DevNonce = random.randint(1, 65535)
-        response = WrapperLoRaMAC.join_request(self._device.DevEUI, self._device.AppEUI, self._device.AppKey, self._device.DevNonce)
-        self._db.open()
-        self._db.update_dev_nonce(self._device.DevEUI.hex(), self._device.DevNonce)
-        self._db.close()
-        if response["PHYPayload"] is None:
-            self._logger(f"LoRaWAN : JoinRequest Failed")
+        try:
+            self._device.DevNonce = random.randint(1, 65535)
+            response = WrapperLoRaMAC.join_request(self._device.DevEUI, self._device.AppEUI, self._device.AppKey, self._device.DevNonce)
+            self._db.open()
+            self._db.update_dev_nonce(self._device.DevEUI.hex(), self._device.DevNonce)
+            self._db.close()
+            if response["PHYPayload"] is None:
+                self._logger.debug(f"LoRaWAN : JoinRequest Failed")
+                return False
+            self._device.uplinkPhyPayload = response["PHYPayload"]
+            return True
+        except:
+            self._logger.error(f"LoRaWAN : Join Request")
             return False
-        self._device.uplinkPhyPayload = response["PHYPayload"]
-        return True
 
     def __lorawan_join_accept(self) -> bool:
-        response = WrapperLoRaMAC.join_accept(self._device.downlinkPhyPayload, self._device.AppKey, self._device.DevNonce)
-        if response is None:
-            self._logger(f"LoRaWAN : JoinAccept Failed")
+        try:
+            response = WrapperLoRaMAC.join_accept(self._device.downlinkPhyPayload, self._device.AppKey, self._device.DevNonce)
+            if response is None:
+                self._logger.debug(f"LoRaWAN : JoinAccept Failed")
+                return False
+            self._device.DevAddr = bytes(response["DevAddr"])
+            self._device.NwkSKey = bytes(response["NwkSKey"])
+            self._device.NwkSKey = bytes(response["AppSKey"])
+            self._device.isJoined = True
+            self._device.FCnt = 0
+            self._db.open()
+            self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
+                                        self._device.NwkSKey.hex(), self._device.AppSKey.hex())
+            self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
+            self._db.close()
+            return True
+        except:
+            self._logger.error(f"LoRaWAN : Join Accept")
             return False
-        self._device.DevAddr = bytes(response["DevAddr"])
-        self._device.NwkSKey = bytes(response["NwkSKey"])
-        self._device.NwkSKey = bytes(response["AppSKey"])
-        self._device.isJoined = True
-        self._device.FCnt = 0
-        self._db.open()
-        self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
-                                     self._device.NwkSKey.hex(), self._device.AppSKey.hex())
-        self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
-        self._db.close()
-        return True
 
 
     def __lorawan_data_up(self, confirmed:bool=False) -> bool:
-        self._device.FCnt = self._device.FCnt + 1
-        if confirmed is False:
-            response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
-                                                        self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                        ack=self._device.Ack)
-        else:
-            response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
-                                                        self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                        ack=self._device.Ack)
-        self._db.open()
-        self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
-        self._db.close()
-        if response["PHYPayload"] is None:
-            self._logger(f"LoRaWAN : UnConfirmedDataUp Failed")
+        try:
+            self._device.FCnt = self._device.FCnt + 1
+            if confirmed is False:
+                response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
+                                                            self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
+                                                            ack=self._device.Ack)
+            else:
+                response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
+                                                            self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
+                                                            ack=self._device.Ack)
+            self._db.open()
+            self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
+            self._db.close()
+            if response["PHYPayload"] is None:
+                self._logger.debug(f"LoRaWAN : UnConfirmedDataUp Failed")
+                return False
+            
+            self._device.uplinkPhyPayload = response["PHYPayload"]
+            return True
+        except:
+            self._logger.error(f"LoRaWAN : Data Up")
             return False
-        
-        self._device.uplinkPhyPayload = response["PHYPayload"]
-        return True
     def __lorawan_data_down(self) -> bool:
-        DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
-        DevAddr.reverse()
-        if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
-            self._logger.debug(f"LoRaWAN : DataDown DevAddr Mismatching")
+        try:
+            DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
+            DevAddr.reverse()
+            if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
+                self._logger.debug(f"LoRaWAN : DataDown DevAddr Mismatching")
+                return False
+            
+            response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
+                                                self._device.NwkSKey.hex(), self._device.AppSKey.hex())
+            if response is None:
+                return False
+            
+            self._device.downlinkMacPayload = response["MacPayload"]
+            self._device.Adr = response["ADR"]
+            self._device.Rfu = response["RFU"]
+            self._device.AckDown = response["ACK"]
+            self._device.FCntDown = response["FCntDown"]
+            self._device.FPortDown = response["FPortDown"]
+            return True
+        except:
+            self._logger.error(f"LoRaWAN : Data Down")
             return False
-        
-        response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
-                                            self._device.NwkSKey.hex(), self._device.AppSKey.hex())
-        if response is None:
-            return False
-        
-        self._device.downlinkMacPayload = response["MacPayload"]
-        self._device.Adr = response["ADR"]
-        self._device.Rfu = response["RFU"]
-        self._device.AckDown = response["ACK"]
-        self._device.FCntDown = response["FCntDown"]
-        self._device.FPortDown = response["FPortDown"]
-        return True
