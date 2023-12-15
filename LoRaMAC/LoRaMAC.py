@@ -291,7 +291,7 @@ class LoRaMAC():
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
             time.sleep(0.1)
-            self._LoRa.wait()
+            self._LoRa.wait(1)
             if self._LoRa.available() == 0:
                 self._LoRaSemaphore.release()
                 continue
@@ -401,11 +401,11 @@ class LoRaMAC():
         return self._LoRa.wait(delay)
 
     def __radio_receive(self, delay:int)-> bytes:
-        status = self._LoRa.status()
-        self._logger.debug(f"RX  : RX status {status} done? {status == self._LoRa.STATUS_RX_DONE}")
         phyPayload = []
         if not self._LoRa.wait(delay):
             return bytes([])
+        status = self._LoRa.status()
+        self._logger.debug(f"RX  : RX status {status} done? {status == self._LoRa.STATUS_RX_DONE}")
         while self._LoRa.available():
             phyPayload.append(int(self._LoRa.read()))
         return bytes(phyPayload)
