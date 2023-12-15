@@ -296,7 +296,7 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
 
-            self._device.downlinkPhyPayload = self.__radio_receive(delay=1)
+            self.__radio_receive(delay=1)
             if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
                 continue
@@ -368,8 +368,6 @@ class LoRaMAC():
 ############################## API to LoRaRF Library
     def __radio_tx_mode(self):
         self._logger.debug(f"TX  : FREQ = {self._region.uplink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
-        self._LoRa.clearDeviceErrors()
-        self._LoRa.resetStats()
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setTxPower(LORA_DEFAULT_TX_POWER, self._LoRa.TX_POWER_SX1262)
         self._LoRa.setFrequency(self._region.uplink_frequency(self._channel))
@@ -378,9 +376,6 @@ class LoRaMAC():
     
     def __radio_rx1_mode(self):
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
-        self._LoRa.clearDeviceErrors()
-        self._LoRa.resetStats()
-        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.downlink_frequency(self._channel))
@@ -390,7 +385,6 @@ class LoRaMAC():
         
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
-        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
@@ -405,13 +399,15 @@ class LoRaMAC():
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
         return self._LoRa.wait(delay)
 
-    def __radio_receive(self, delay:int)-> bytes:
+    def __radio_receive(self, delay:int)-> bool:
         if not self._LoRa.wait(delay):
-            return bytes([])
+            return False
         status = self._LoRa.status()
         self._logger.debug(f"RX  : RX status {status} done? {status == self._LoRa.STATUS_RX_DONE}")
         self._LoRa.wait(delay)
-        return self._LoRa.get(self._LoRa.available())
+        self._device.downlinkPhyPayload = self._LoRa.get(self._LoRa.available())
+        self._LoRa.purge(len(self._device.downlinkPhyPayload))
+        return True
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
