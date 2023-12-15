@@ -17,7 +17,9 @@ logging.basicConfig(format='%(asctime)s.%(msecs)03d   %(levelname)-8s %(name)s: 
 
 class LoRaMAC():
     """
-    The `LoRaMAC` class is a Python implementation of a LoRaWAN MAC layer. It provides methods for joining a LoRaWAN network, transmitting data, and receiving data. The class uses a LoRaRF library for low-level communication with the LoRa radio module.
+    The `LoRaMAC` class is a Python implementation of a LoRaWAN MAC layer. 
+    It provides methods for joining a LoRaWAN network, transmitting data, and receiving data.
+    The class uses a LoRaRF library for low-level communication with the LoRa radio module.
 
     Note:
         Only LoRaWAN Class C device is implemented (can work with LoRaWAN Class A)
