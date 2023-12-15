@@ -29,19 +29,19 @@ class App():
         """
         self.__logger = logging.getLogger("APP[MAIN]")
         self.__logger.setLevel(level)
-        self.__logger.debug(f"App Initializing...")
+        self.__logger.info(f"App Initializing...")
         self.__region = region
         self.__device = Device(DEVEUI, APPEUI, APPKEY)
         self.__LoRaWAN = LoRaMAC(self.__device, self.__region)
         self.__LoRaWAN.set_logging_level(level)
         self.__LoRaWAN.set_callback(self.__on_join_callback, self.__on_transmit_callback, self.__on_receive_callback)
-        self.__logger.debug(f"App Initialized")
+        self.__logger.info(f"App Initialized")
 
     def run(self):
         """
         Runs The `App` continuously
         """
-        self.__logger.debug(f"App Running")
+        self.__logger.info(f"App Running")
         self.__LoRaWAN.join(max_tries=3, forced=True)
         while True:
             if self.__LoRaWAN.is_joined():
