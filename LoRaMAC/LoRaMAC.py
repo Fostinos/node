@@ -281,8 +281,8 @@ class LoRaMAC():
                 if self._device.isJoined and self._device.confirmed_uplink:
                     if callable(self._on_receive):
                         self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
-                if not self._device.isJoined : 
-                    if self._device.join_max_tries > 0 :
+                if not self._device.isJoined: 
+                    if self._device.join_max_tries > 0:
                         self.join(self._device.join_max_tries)
                     elif callable(self._on_join):
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
