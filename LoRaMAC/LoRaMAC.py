@@ -376,7 +376,6 @@ class LoRaMAC():
     
     def __radio_rx1_mode(self):
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
-        self._LoRa.clearDeviceErrors()
         self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
@@ -387,13 +386,12 @@ class LoRaMAC():
         
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
-        self._LoRa.clearDeviceErrors()
         self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
         self._LoRa.setLoRaModulation(self._region.value.RX2_SPREADING_FACTOR, self._region.value.DOWNLINK_BANDWIDTH, LORA_CODING_RATE)
-        self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, DOWNLINK_CRC_TYPE, DOWNLINK_IQ_POLARITY)
+        self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, True, DOWNLINK_IQ_POLARITY)
         self._LoRa.request(self._LoRa.RX_CONTINUOUS)
 
     def __radio_transmit(self, delay:int)-> bool:
@@ -407,7 +405,6 @@ class LoRaMAC():
         if not self._LoRa.wait(delay):
             return bytes([])
         status = self._LoRa.status()
-        self._LoRa.clearIrqStatus()
         if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
             self._logger.error(f"RX  : LoRa {RadioStatus(status)}")
             self._LoRa.get(self._LoRa.available())
