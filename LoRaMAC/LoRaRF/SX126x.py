@@ -731,6 +731,7 @@ class SX126x(BaseLoRa) :
             gpio.output(self._rxen, gpio.HIGH)
 
         # set device to receive mode with configured timeout, single, or continuous operation
+        print("LoRaRF : Going to RX Mode")
         self.setRx(rxTimeout)
 
         # set operation status to wait and attach RX interrupt handler
