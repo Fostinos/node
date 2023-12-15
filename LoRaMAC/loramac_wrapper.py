@@ -170,7 +170,7 @@ class WrapperLoRaMAC :
         ctypes.memmove(ctypes.addressof(buffer), phyPayload, bufferSize)
 
         status = dataDown(ctypes.byref(mac), buffer, bufferSize)
-
+        print("DOWNLINK Low Level Status = ", status)
         if status == False:
             return None
         
@@ -184,6 +184,7 @@ class WrapperLoRaMAC :
         output["ACK"]=bool(mac.FHDR.FCtrl.downlink.ACK)
         output["FCntDown"]=int(mac.FHDR.FCnt16)
         output["FPortDown"]=int(mac.FPort)
+        print("DOWNLINK Low Level Output = ", output)
 
         return output
 
