@@ -281,7 +281,7 @@ class LoRaMAC():
             
             if self._device.rx2_window_timeout > 0 and time.time() >= self._device.rx2_window_timeout:
                 self._device.rx2_window_timeout = -1
-                if self._device.isJoined and self._device.confirmed_uplink:
+                if self._device.isJoined and self._device.confirmed_uplink and not self._device.AckDown:
                     if callable(self._on_receive):
                         self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
                 if not self._device.isJoined: 
@@ -439,11 +439,12 @@ class LoRaMAC():
         try:
             self._device.FCnt = self._device.FCnt + 1
             self._device.confirmed_uplink = confirmed
-            if confirmed is False:
+            if not confirmed:
                 response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
                                                             ack=self._device.Ack)
             else:
+                self._device.AckDown = False
                 response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
                                                             ack=self._device.Ack)
@@ -451,24 +452,25 @@ class LoRaMAC():
             self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
             self._db.close()
             if response["PHYPayload"] is None:
-                self._logger.debug(f"LoRaWAN : UnConfirmedDataUp Failed")
+                self._logger.debug(f"LoRaWAN : Uplink Failed")
                 return False
             
             self._device.uplinkPhyPayload = response["PHYPayload"]
             return True
         except:
-            self._logger.error(f"LoRaWAN : Data Up")
+            self._logger.error(f"LoRaWAN : Uplink")
             return False
     def __lorawan_data_down(self) -> bool:
         try:
             DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
             DevAddr.reverse()
             if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
-                self._logger.debug(f"LoRaWAN : DataDown DevAddr Mismatching")
+                self._logger.debug(f"LoRaWAN : Downlink DevAddr Mismatching")
                 return False
             
             response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
                                                 self._device.NwkSKey, self._device.AppSKey)
+            self._logger.debug(f"LoRaWAN : Downlink {response}")
             if response is None:
                 return False
             
@@ -480,5 +482,5 @@ class LoRaMAC():
             self._device.FPortDown = response["FPortDown"]
             return True
         except:
-            self._logger.error(f"LoRaWAN : Data Down")
+            self._logger.error(f"LoRaWAN : Downlink")
             return False
