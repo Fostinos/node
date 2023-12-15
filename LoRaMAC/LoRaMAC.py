@@ -368,6 +368,8 @@ class LoRaMAC():
 ############################## API to LoRaRF Library
     def __radio_tx_mode(self):
         self._logger.debug(f"TX  : FREQ = {self._region.uplink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
+        self._LoRa.clearDeviceErrors()
+        self._LoRa.resetStats()
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setTxPower(LORA_DEFAULT_TX_POWER, self._LoRa.TX_POWER_SX1262)
         self._LoRa.setFrequency(self._region.uplink_frequency(self._channel))
@@ -376,6 +378,8 @@ class LoRaMAC():
     
     def __radio_rx1_mode(self):
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
+        self._LoRa.clearDeviceErrors()
+        self._LoRa.resetStats()
         self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
