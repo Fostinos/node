@@ -73,6 +73,7 @@ class LoRaMAC():
         self._on_receive = None
         self._logger = logging.getLogger("APP[LoRaMAC]")
         self._logger.setLevel(logging.DEBUG)
+        self._logger.debug(f"LoRaMAC Initializing...")
         self._channel = self._region.value.UPLINK_CHANNEL_MIN
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         self._LoRa = SX126x()
@@ -92,11 +93,12 @@ class LoRaMAC():
         self._LoRaSemaphore = Semaphore()
         self._LoRaSemaphore.release()
         self._thread = Thread(target=self.__background_task, name="LoRaMAC Service", daemon=True)
-
+        self._logger.debug(f"LoRa Radio Initializing...")
         self._LoRa.begin(RADIO_SPI_BUS_ID, RADIO_SPI_CS_ID, RADIO_RESET_PIN, RADIO_BUSY_PIN,
                          RADIO_IRQ_PIN, RADIO_TX_ENABLE_PIN, RADIO_RX_ENABLE_PIN)
-
+        self._logger.debug(f"LoRa Radio Initialized")
         self._thread.start()
+        self._logger.debug(f"LoRaMAC Initialized")
 
     def is_joined(self)->bool:
         """
@@ -136,10 +138,10 @@ class LoRaMAC():
             LoRaWAN = LoRaMAC(device, region)\n
             LoRaWAN.set_callback(on_join_callback, on_transmit_callback, on_receive_callback)\n
         """
+        self._logger.debug(f"Events callback functions setting...")
         self._on_join = on_join
         self._on_transmit = on_transmit
         self._on_receive = on_receive
-        self._logger.debug(f"Callback functions setting")
 
     def join(self, max_tries:int=1, forced:bool=False)->bool:
         """
