@@ -47,7 +47,7 @@ class App():
             if self.__LoRaWAN.is_joined():
                 self.__logger.info("The device transmit data")
                 self.__LoRaWAN.transmit(bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x07, 0x08, 0x09]), True)
-            time.sleep(5)
+            time.sleep(30)
 
 
 ########################## Callback functions
