@@ -290,8 +290,8 @@ class LoRaMAC():
                     elif callable(self._on_join):
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
-            time.sleep(0.5)
-            self._LoRa.wait(1)
+            time.sleep(0.1)
+            self._LoRa.wait()
             if self._LoRa.available() == 0:
                 self._LoRaSemaphore.release()
                 continue
@@ -301,6 +301,7 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
             if len(self._device.downlinkPhyPayload) < 10:
+                self._logger.error(f"Downlink PhyPayload")
                 self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
