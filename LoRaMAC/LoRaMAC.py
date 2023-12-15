@@ -295,13 +295,13 @@ class LoRaMAC():
                 continue
 
             self._device.downlinkPhyPayload = self.__radio_receive(delay=1)
-            if len(self._device.downlinkPhyPayload) == 0 :
+            if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
                 continue
+            
             self.__radio_rx2_mode()
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
-            self._logger.debug(f"DOWN: {self._device.message_type}, PHYPAYLOAD = {self._device.downlinkPhyPayload.hex()}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
