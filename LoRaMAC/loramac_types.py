@@ -1,7 +1,7 @@
 import ctypes
-from enum import IntEnum
+from enum import Enum
 
-class MessageType(IntEnum):
+class MessageType(Enum):
     JOIN_REQUEST          = 0
     JOIN_ACCEPT           = 1
     UNCONFIRMED_DATA_UP   = 2
