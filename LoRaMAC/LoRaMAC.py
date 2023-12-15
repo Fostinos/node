@@ -265,7 +265,6 @@ class LoRaMAC():
     def __background_task(self):
         while True:
             
-            time.sleep(0.5)
             if not self._LoRaSemaphore.acquire(timeout=0.5):
                 time.sleep(1)
                 continue
@@ -291,6 +290,7 @@ class LoRaMAC():
                     elif callable(self._on_join):
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
+            time.sleep(0.5)
             self._LoRa.wait(1)
             if self._LoRa.available() == 0:
                 self._LoRaSemaphore.release()
