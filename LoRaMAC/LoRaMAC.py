@@ -296,7 +296,7 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
 
-            self.__radio_receive(delay=1)
+            self._device.downlinkPhyPayload = self.__radio_receive(delay=1)
             if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
                 continue
@@ -376,6 +376,8 @@ class LoRaMAC():
     
     def __radio_rx1_mode(self):
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
+        self._LoRa.clearDeviceErrors()
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.downlink_frequency(self._channel))
@@ -385,6 +387,8 @@ class LoRaMAC():
         
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
+        self._LoRa.clearDeviceErrors()
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
@@ -399,15 +403,13 @@ class LoRaMAC():
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
         return self._LoRa.wait(delay)
 
-    def __radio_receive(self, delay:int)-> bool:
+    def __radio_receive(self, delay:int)-> bytes:
         if not self._LoRa.wait(delay):
-            return False
+            return bytes([])
         status = self._LoRa.status()
-        self._logger.debug(f"RX  : RX status {status} done? {status == self._LoRa.STATUS_RX_DONE}")
-        self._LoRa.wait(delay)
-        self._device.downlinkPhyPayload = self._LoRa.get(self._LoRa.available())
-        self._LoRa.purge(len(self._device.downlinkPhyPayload))
-        return True
+        if status != self._LoRa.STATUS_RX_DONE:
+            return bytes([])
+        return self._LoRa.get(self._LoRa.available())
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
