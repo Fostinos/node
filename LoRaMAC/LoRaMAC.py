@@ -265,6 +265,7 @@ class LoRaMAC():
     def __background_task(self):
         while True:
             
+            time.sleep(0.5)
             if not self._LoRaSemaphore.acquire(timeout=0.5):
                 time.sleep(1)
                 continue
