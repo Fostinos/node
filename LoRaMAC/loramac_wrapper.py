@@ -157,7 +157,7 @@ class WrapperLoRaMAC :
         FHDR_FCtrl_data = FHDR_FCtrl_t(FHDR_FCtrl_downlink_data, ())
         FOpts = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_MAX_FOPTS_LEN)()
         
-        FHDR_data = FHDR_t(int(DevAddr, 16), FHDR_FCtrl_data, 0, FOpts)
+        FHDR_data = FHDR_t(int(DevAddr.hex(), 16), FHDR_FCtrl_data, 0, FOpts)
 
         payloadSize = WrapperLoRaMAC.LORAWAN_BUFFER_SIZE_MAX
         payload = (ctypes.c_uint8 * payloadSize)()
@@ -170,7 +170,6 @@ class WrapperLoRaMAC :
         ctypes.memmove(ctypes.addressof(buffer), phyPayload, bufferSize)
 
         status = dataDown(ctypes.byref(mac), buffer, bufferSize)
-        print("DOWNLINK Low Level Status = ", status)
         if status == False:
             return None
         
@@ -184,7 +183,6 @@ class WrapperLoRaMAC :
         output["ACK"]=bool(mac.FHDR.FCtrl.downlink.ACK)
         output["FCntDown"]=int(mac.FHDR.FCnt16)
         output["FPortDown"]=int(mac.FPort)
-        print("DOWNLINK Low Level Output = ", output)
 
         return output
 

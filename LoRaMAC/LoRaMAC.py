@@ -462,7 +462,6 @@ class LoRaMAC():
             return False
     def __lorawan_data_down(self) -> bool:
         try:
-            self._logger.debug(f"LoRaWAN : Downlink PHYPAYLOAD {self._device.downlinkPhyPayload.hex()}")
             DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
             DevAddr.reverse()
             if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
@@ -471,7 +470,6 @@ class LoRaMAC():
             
             response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
                                                 self._device.NwkSKey, self._device.AppSKey)
-            self._logger.debug(f"LoRaWAN : Downlink {response}")
             if response is None:
                 return False
             
