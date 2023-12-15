@@ -54,7 +54,9 @@ class Device():
         self.uplink_channel_min = 0
         self.uplink_channel_max = self.uplink_channel_min + 7 * (self.channelGroup + 1)
         self.rx2_window_time : float = 0
+        self.rx2_window_timeout : float = 0
         self.message_type = None
+        self.confirmed_uplink = False
 
 
     def to_dict(self) -> dict:

@@ -268,10 +268,25 @@ class LoRaMAC():
 
             if self._device.rx2_window_time > 0 and time.time() >= self._device.rx2_window_time:
                 self._device.rx2_window_time = -1
+                if self._device.isJoined and self._device.confirmed_uplink:
+                    self._device.rx2_window_timeout = time.time() + UPLINK_RX2_DELAY
+                if not self._device.isJoined:
+                    self._device.rx2_window_timeout = time.time() + JOIN_RX2_DELAY
                 self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
             
+            if self._device.rx2_window_timeout > 0 and time.time() >= self._device.rx2_window_timeout:
+                self._device.rx2_window_timeout = -1
+                if self._device.isJoined and self._device.confirmed_uplink:
+                    if callable(self._on_receive):
+                        self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
+                if self._device.isJoined : 
+                    if self._device.join_max_tries > 0 :
+                        self.join(self._device.join_max_tries)
+                    elif callable(self._on_join):
+                        self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
+
             self._LoRa.wait(1)
             if not self._LoRa.available():
                 self._LoRaSemaphore.release()
@@ -417,6 +432,7 @@ class LoRaMAC():
     def __lorawan_data_up(self, confirmed:bool=False) -> bool:
         try:
             self._device.FCnt = self._device.FCnt + 1
+            self._device.confirmed_uplink = confirmed
             if confirmed is False:
                 response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,

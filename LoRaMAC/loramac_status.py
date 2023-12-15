@@ -26,3 +26,4 @@ class ReceiveStatus(Enum):
     """
     RX_OK               = 0
     RX_PAYLOAD_ERROR    = 1
+    RX_TIMEOUT_ERROR    = 2
