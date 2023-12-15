@@ -38,7 +38,7 @@ class US915():
 
 class Region(Enum):
     """
-    Represents different regions and provides a method to calculate the uplink frequency based on the region and channel.
+    Represents different regions and provides a method to calculate uplink and downlink frequencies based on the region and channel.
     """
     EU868 = EU868()
     US915 = US915()
