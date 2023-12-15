@@ -262,6 +262,7 @@ class LoRaMAC():
 
 
     def __background_task(self):
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         while True:
             
             if not self._LoRaSemaphore.acquire(timeout=0.5):
