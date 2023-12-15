@@ -10,6 +10,7 @@ class EU868():
     DOWNLINK_FREQUENCY_CHANNEL_0 = 868100000       # 868.1 Mhz
     DOWNLINK_FREQUENCY_STEP      = 200000          # 0.2 Mhz
     RX2_FREQUENCY                = 869525000       # 869.525 Mhz
+    RX2_SPREADING_FACTOR         = 12
     UPLINK_BANDWIDTH             = 125000          # 125 khz
     DOWNLINK_BANDWIDTH           = 125000          # 125 khz
     SPREADING_FACTOR_MIN         = 7
@@ -28,6 +29,7 @@ class US915():
     DOWNLINK_FREQUENCY_CHANNEL_0 = 923300000       # 923.3 Mhz
     DOWNLINK_FREQUENCY_STEP      = 600000          # 0.6 Mhz
     RX2_FREQUENCY                = 923300000       # 923.3 Mhz
+    RX2_SPREADING_FACTOR         = 12
     UPLINK_BANDWIDTH             = 125000          # 125 khz
     DOWNLINK_BANDWIDTH           = 500000          # 500 khz
     SPREADING_FACTOR_MIN         = 7
