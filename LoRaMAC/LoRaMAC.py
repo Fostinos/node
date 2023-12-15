@@ -12,9 +12,8 @@ import logging
 import random
 import time
 
-logging.basicConfig(format='%(asctime)s  %(levelname)-8s %(name)s: %(message)s',
+logging.basicConfig(format='%(asctime)s.%(msecs)03d   %(levelname)-8s %(name)s: %(message)s',
                 level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
-logging.getLogger("mysql.connector").setLevel(level=logging.ERROR)
 
 class LoRaMAC():
     """
