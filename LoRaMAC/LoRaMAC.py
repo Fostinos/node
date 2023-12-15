@@ -422,7 +422,7 @@ class LoRaMAC():
             self._device.isJoined = True
             self._device.DevAddr = bytes(response["DevAddr"])
             self._device.NwkSKey = bytes(response["NwkSKey"])
-            self._device.NwkSKey = bytes(response["AppSKey"])
+            self._device.AppSKey = bytes(response["AppSKey"])
             self._device.FCnt = 0
             self._db.open()
             self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
