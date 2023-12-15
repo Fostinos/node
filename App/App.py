@@ -62,7 +62,6 @@ class App():
         self.__logger.info(f"{status}")
         if status == JoinStatus.JOIN_OK:
             self.__logger.debug(f"DEVICE : {self.__device.to_dict()}")
-            print(self.__device.to_dict())
         if status == JoinStatus.JOIN_MAX_TRY_ERROR:
             self.__logger.debug(f"DEVICE : {self.__device.to_dict()}")
 

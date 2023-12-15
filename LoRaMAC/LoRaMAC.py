@@ -303,7 +303,7 @@ class LoRaMAC():
                 self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
-
+            
             self.__radio_rx2_mode()
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
@@ -320,6 +320,7 @@ class LoRaMAC():
             
             elif self._device.message_type == MessageType.CONFIRMED_DATA_DOWN or \
                 self._device.message_type  == MessageType.UNCONFIRMED_DATA_DOWN:
+                self._device.rx2_window_timeout = -1
                 if not self._device.isJoined:
                     continue
                 if self._device.message_type == MessageType.CONFIRMED_DATA_DOWN:
