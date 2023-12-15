@@ -313,6 +313,8 @@ class LoRaMAC():
             
             elif self._device.message_type == MessageType.CONFIRMED_DATA_DOWN or \
                 self._device.message_type  == MessageType.UNCONFIRMED_DATA_DOWN:
+                if not self._device.isJoined:
+                    continue
                 if self._device.message_type == MessageType.CONFIRMED_DATA_DOWN:
                     self._device.Ack = True
                 else:
