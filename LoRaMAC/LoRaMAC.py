@@ -176,7 +176,6 @@ class LoRaMAC():
                 self._on_join(JoinStatus.JOIN_OK)
             return True
         
-        self._logger.debug(f"Joining...")
         self._device.isJoined = False
         if not self.__lorawan_join_request():
             if callable(self._on_join):
@@ -189,6 +188,7 @@ class LoRaMAC():
             self._channel = self.__random_channel()
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         
+        self._logger.info(f"Joining...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
@@ -226,7 +226,6 @@ class LoRaMAC():
                 self._on_transmit(TransmitStatus.TX_JOIN_ERROR)
             return False
         
-        self._logger.debug(f"Transmitting...")
         if not self.__lorawan_data_up(confirmed):
             if callable(self._on_transmit):
                 self._on_transmit(TransmitStatus.TX_PAYLOAD_ERROR)
@@ -235,6 +234,7 @@ class LoRaMAC():
         self._channel = self.__random_channel()
         self._spreading_factor = self.__random_spreading_factor()
         
+        self._logger.info(f"Transmitting...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
@@ -309,7 +309,7 @@ class LoRaMAC():
             self.__radio_rx2_mode()
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
-            self._logger.error(f"Downlink {self._device.message_type}")
+            self._logger.info(f"Downlink {self._device.message_type}")
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if self._device.isJoined:
                     continue
