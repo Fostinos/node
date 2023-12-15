@@ -170,6 +170,7 @@ class WrapperLoRaMAC :
         ctypes.memmove(ctypes.addressof(buffer), phyPayload, bufferSize)
 
         status = dataDown(ctypes.byref(mac), buffer, bufferSize)
+        print(f"LoRaWAN : Downlink Low Level : Status = {bool(status)} PhyPayload = {PHYPayload.hex()}")
         if status == False:
             return None
         
