@@ -373,6 +373,7 @@ class LoRaMAC():
         self._logger.debug(f"TX  : FREQ = {self._region.uplink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
     
     def __radio_rx1_mode(self):
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setFrequency(self._region.downlink_frequency(self._channel))
         self._LoRa.setLoRaModulation(self._spreading_factor, self._region.value.DOWNLINK_BANDWIDTH, LORA_CODING_RATE)
@@ -381,10 +382,12 @@ class LoRaMAC():
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
         
     def __radio_rx2_mode(self)-> bool:
+        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
         self._LoRa.setLoRaModulation(self._region.value.RX2_SPREADING_FACTOR, self._region.value.DOWNLINK_BANDWIDTH, LORA_CODING_RATE)
         self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, DOWNLINK_CRC_TYPE, DOWNLINK_IQ_POLARITY)
+        self._LoRa.setCrcEnable(DOWNLINK_CRC_TYPE)
         self._LoRa.request(self._LoRa.RX_CONTINUOUS)
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
 
