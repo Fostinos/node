@@ -408,7 +408,7 @@ class LoRaMAC():
             return bytes([])
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
-            self._logger.error(f"RX  : LoRa Radio Status {RadioStatus(status)}")
+            self._logger.error(f"RX  : LoRaRF {RadioStatus(status)}")
             return bytes([])
         return self._LoRa.get(self._LoRa.available())
         
