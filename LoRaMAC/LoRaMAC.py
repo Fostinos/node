@@ -299,9 +299,11 @@ class LoRaMAC():
             if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
                 continue
-            
-            self.__radio_rx2_mode()
-            self._LoRaSemaphore.release()
+            if len(self._device.downlinkPhyPayload) < 10:
+                self.__radio_rx2_mode()
+                self._LoRaSemaphore.release()
+                continue
+
             self.__lorawan_message_type()
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if not self.__lorawan_join_accept():
