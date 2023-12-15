@@ -419,10 +419,10 @@ class LoRaMAC():
             if response is None:
                 self._logger.debug(f"LoRaWAN : JoinAccept Failed")
                 return False
+            self._device.isJoined = True
             self._device.DevAddr = bytes(response["DevAddr"])
             self._device.NwkSKey = bytes(response["NwkSKey"])
             self._device.NwkSKey = bytes(response["AppSKey"])
-            self._device.isJoined = True
             self._device.FCnt = 0
             self._db.open()
             self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
