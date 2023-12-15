@@ -26,5 +26,5 @@ LORA_DEFAULT_TX_POWER   = 17      # 17 dBm
 UPLINK_IQ_POLARITY      = False
 DOWNLINK_IQ_POLARITY    = True
 UPLINK_CRC_TYPE         = True    # enabled
-DOWNLINK_CRC_TYPE       = True   # disabled
+DOWNLINK_CRC_TYPE       = False   # disabled
 
