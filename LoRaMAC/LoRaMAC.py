@@ -3,7 +3,7 @@ from .loramac_wrapper import WrapperLoRaMAC
 from .loramac_types import MessageType
 from .loramac_region import Region
 from .loramac_device import Device
-from .loramac_status import JoinStatus, TransmitStatus, ReceiveStatus
+from .loramac_status import JoinStatus, TransmitStatus, ReceiveStatus, RadioStatus
 from .loramac_settings import *
 from .LoRaRF import SX126x
 
@@ -409,6 +409,8 @@ class LoRaMAC():
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE:
             return bytes([])
+        else :
+            self._logger.error(f"RX  : LoRa Radio Status {RadioStatus(status)}")
         return self._LoRa.get(self._LoRa.available())
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
@@ -495,7 +497,7 @@ class LoRaMAC():
             
             response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
                                                 self._device.NwkSKey, self._device.AppSKey)
-            self._logger.debug(f"LoRaWAN : Downlink Response {response}")
+            
             if response is None:
                 return False
             

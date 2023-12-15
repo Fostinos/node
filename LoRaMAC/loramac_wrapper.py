@@ -7,9 +7,6 @@ class WrapperLoRaMAC :
 
     LORAWAN_MAX_FOPTS_LEN = 15
     LORAWAN_BUFFER_SIZE_MAX = 224
-    MESSAGE_TYPE = [MessageType.JOIN_REQUEST, MessageType.JOIN_ACCEPT,  MessageType.UNCONFIRMED_DATA_UP, 
-                    MessageType.UNCONFIRMED_DATA_DOWN, MessageType.CONFIRMED_DATA_UP, MessageType.CONFIRMED_DATA_DOWN,
-                    MessageType.REJOIN_REQUEST, MessageType.PROPRIETARY]
 
     @staticmethod
     def message_type(PHYPayload:bytes) -> MessageType :
@@ -22,7 +19,7 @@ class WrapperLoRaMAC :
 
         msg_type : MHDR_MType_t = messageType(buffer, bufferSize)
 
-        return WrapperLoRaMAC.MESSAGE_TYPE[msg_type.value]
+        return MessageType(msg_type.value)
 
 
     @staticmethod
@@ -170,7 +167,7 @@ class WrapperLoRaMAC :
         ctypes.memmove(ctypes.addressof(buffer), phyPayload, bufferSize)
 
         status = dataDown(ctypes.byref(mac), buffer, bufferSize)
-        print(f"LoRaWAN : Downlink Low Level : Status = {bool(status)} PhyPayload = {PHYPayload.hex()}")
+        
         if status == False:
             return None
         
