@@ -37,7 +37,6 @@ class LoRaMAC():
     - Receiving data
 
     Methods:
-    - __init__(self, device:Device, region:Region): Initializes the `LoRaMAC` object with a device and region.
     - is_joined(self) -> bool: Returns whether the device has successfully joined the network.
     - set_callback(self, on_join, on_transmit, on_receive): Sets the callback functions for join, transmit, and receive events.
     - join(self, max_tries:int=1, forced:bool=False) -> bool: Joins the LoRaWAN network.
@@ -60,6 +59,13 @@ class LoRaMAC():
     """
     
     def __init__(self, device:Device, region:Region):
+        """
+        Initializes the LoRaMAC object with the provided device and region.
+    
+        Args:
+            device (Device): The device object associated with the LoRaMAC object.
+            region (Region): The region object associated with the LoRaMAC object.
+        """
         self._device = device
         self._region = region
         self._on_join = None
