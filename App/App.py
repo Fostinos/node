@@ -58,7 +58,7 @@ class App():
         Args:
             status (JoinStatus): The status of the join event.
         """
-        self.__logger.debug(f"{status}")
+        self.__logger.info(f"{status}")
         if status == JoinStatus.JOIN_OK:
             self.__logger.debug(f"DEVICE : {self.__device.to_dict()}")
             print(self.__device.to_dict())
@@ -72,7 +72,7 @@ class App():
         Args:
             status (TransmitStatus): The status of the transmit event.
         """
-        self.__logger.debug(f"{status}")
+        self.__logger.info(f"{status}")
 
     def __on_receive_callback(self, status: ReceiveStatus, payload: bytes):
         """
@@ -82,6 +82,6 @@ class App():
             status (ReceiveStatus): The status of the receive event.
             payload (bytes): The received payload.
         """
-        self.__logger.debug(f"{status}")
+        self.__logger.info(f"{status}")
         if status == ReceiveStatus.RX_OK:
             self.__logger.debug(f"Receive Data = {list(payload)}")
