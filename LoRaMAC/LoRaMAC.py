@@ -266,7 +266,7 @@ class LoRaMAC():
         while True:
             
             if not self._LoRaSemaphore.acquire(timeout=0.5):
-                time.sleep(1)
+                time.sleep(0.5)
                 continue
 
             if self._device.rx2_window_time > 0 and time.time() >= self._device.rx2_window_time:
