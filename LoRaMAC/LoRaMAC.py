@@ -468,7 +468,7 @@ class LoRaMAC():
                 return False
             
             response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
-                                                self._device.NwkSKey.hex(), self._device.AppSKey.hex())
+                                                self._device.NwkSKey, self._device.AppSKey)
             if response is None:
                 return False
             
