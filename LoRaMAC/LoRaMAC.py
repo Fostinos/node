@@ -304,8 +304,12 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
 
+            self.__radio_rx2_mode()
+            self._LoRaSemaphore.release()
             self.__lorawan_message_type()
             if self._device.message_type == MessageType.JOIN_ACCEPT:
+                if self._device.isJoined:
+                    continue
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
                             self.join(self._device.join_max_tries)
