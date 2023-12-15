@@ -408,9 +408,8 @@ class LoRaMAC():
             return bytes([])
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE:
-            return bytes([])
-        else :
             self._logger.error(f"RX  : LoRa Radio Status {RadioStatus(status)}")
+            return bytes([])
         return self._LoRa.get(self._LoRa.available())
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
