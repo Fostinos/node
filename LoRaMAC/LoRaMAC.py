@@ -388,7 +388,7 @@ class LoRaMAC():
         self._LoRa.setLoRaModulation(self._region.value.SPREADING_FACTOR_MAX, self._region.value.DOWNLINK_BANDWIDTH, LORA_CODING_RATE)
         self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, DOWNLINK_CRC_TYPE, DOWNLINK_IQ_POLARITY)
         self._LoRa.request(self._LoRa.RX_CONTINUOUS)
-        self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._spreading_factor}")
+        self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.SPREADING_FACTOR_MAX}")
 
     def __radio_transmit(self, delay:int)-> bool:
         self._LoRa.beginPacket()
