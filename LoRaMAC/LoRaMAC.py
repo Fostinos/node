@@ -407,7 +407,7 @@ class LoRaMAC():
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
             self._logger.error(f"RX  : LoRa {RadioStatus(status)}")
-            self._LoRa.get(self._LoRa.available())
+            self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
             return bytes([])
         return self._LoRa.get(self._LoRa.available())
         
