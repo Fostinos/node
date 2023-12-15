@@ -306,6 +306,9 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
             
+            if self._device.rx2_window_time > 0:
+                self.__radio_rx2_mode()
+            
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
             self._logger.info(f"Downlink {self._device.message_type}")
