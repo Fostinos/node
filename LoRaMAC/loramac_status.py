@@ -1,6 +1,6 @@
-from enum import IntEnum
+from enum import Enum
 
-class JoinStatus(IntEnum):
+class JoinStatus(Enum):
     """
     Enumeration that represents different join status codes.
     """
@@ -11,7 +11,7 @@ class JoinStatus(IntEnum):
     
 
 
-class TransmitStatus(IntEnum):
+class TransmitStatus(Enum):
     """
     Enumeration that represents different transmit status codes.
     """
@@ -21,7 +21,7 @@ class TransmitStatus(IntEnum):
     TX_PAYLOAD_ERROR    = 3
 
 
-class ReceiveStatus(IntEnum):
+class ReceiveStatus(Enum):
     """
     Enumeration that represents different receive status codes.
     """
@@ -30,7 +30,7 @@ class ReceiveStatus(IntEnum):
     RX_TIMEOUT_ERROR    = 2
 
     
-class RadioStatus(IntEnum):
+class RadioStatus(Enum):
     """
     Enumeration that represents different LoRa radio status codes.
     """
