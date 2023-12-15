@@ -398,16 +398,12 @@ class LoRaMAC():
         return self._LoRa.wait(delay)
 
     def __radio_receive(self, delay:int)-> bytes:
-        phyPayload = []
         if not self._LoRa.wait(delay):
             return bytes([])
         status = self._LoRa.status()
         self._logger.debug(f"RX  : RX status {status} done? {status == self._LoRa.STATUS_RX_DONE}")
-        if status != self._LoRa.STATUS_RX_DONE:
-            return bytes([])
-        while self._LoRa.available():
-            phyPayload.append(int(self._LoRa.read()))
-        return bytes(phyPayload)
+        self._LoRa.wait(delay)
+        return self._LoRa.get(self._LoRa.available())
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
