@@ -3,10 +3,12 @@ from LoRaMAC import Region
 from LoRaMAC import Device
 from LoRaMAC import JoinStatus, TransmitStatus, ReceiveStatus
 
-from .Keys import *
-
+import os
+import json
 import time
 import logging
+
+__currentdir = os.path.dirname(os.path.realpath(__file__))
 
 class App():
     """
@@ -31,7 +33,9 @@ class App():
         self.__logger.setLevel(level)
         self.__logger.info(f"App Initializing...")
         self.__region = region
-        self.__device = Device(DEVEUI, APPEUI, APPKEY)
+        self.__config = dict()
+        self.__load_config()
+        self.__device = Device(self.__config["DevEUI"], self.__config["AppEUI"], self.__config["AppKey"])
         self.__LoRaWAN = LoRaMAC(self.__device, self.__region)
         self.__LoRaWAN.set_logging_level(level)
         self.__LoRaWAN.set_callback(self.__on_join_callback, self.__on_transmit_callback, self.__on_receive_callback)
@@ -49,6 +53,30 @@ class App():
                 self.__LoRaWAN.transmit(bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x07, 0x08, 0x09]), True)
                 time.sleep(899)
             time.sleep(1)
+
+########################## Config Storage functions
+            
+    def __load_config(self)->bool:
+        try:
+            with open(os.path.join(__currentdir, "config.json")) as file:
+                self.__config = dict(json.load(file))
+            self.__config.get("DevEUI")
+            self.__config.get("AppEUI")
+            self.__config.get("AppKey")
+            self.__config.get("config")
+            return True
+        except:
+            self.__logger.critical(f"Load config file: critical error")
+            raise ValueError("Verify config.json file in the App folder")
+
+    def __save_config(self)->bool:
+        try:
+            with open(os.path.join(__currentdir, "config.json"), "w") as file:
+                file.write(json.dumps(self.__config, indent=4))
+            return True
+        except:
+            self.__logger.warning(f"Save configuration file")
+            return False
 
 
 ########################## Callback functions
