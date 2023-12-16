@@ -70,5 +70,5 @@ class Region(Enum):
             int: The calculated downlink frequency.
         """
         if self == Region.EU868 and channel > 2:
-            return self.value.UPLINK_FREQUENCY_CHANNEL_0 - (8 - channel) * self.value.UPLINK_FREQUENCY_STEP
+            return self.value.DOWNLINK_FREQUENCY_CHANNEL_0 - (8 - channel) * self.value.DOWNLINK_FREQUENCY_STEP
         return self.value.DOWNLINK_FREQUENCY_CHANNEL_0 + (channel % 8) * self.value.DOWNLINK_FREQUENCY_STEP
