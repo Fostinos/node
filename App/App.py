@@ -10,8 +10,6 @@ import logging
 
 from .Sensors import Relay, Banana
 
-__currentdir = os.path.dirname(os.path.realpath(__file__))
-
 class App():
     """
     Represents an application using the LoRaMAC protocol.
@@ -81,7 +79,8 @@ class App():
             
     def __load_config(self)->bool:
         try:
-            with open(os.path.join(__currentdir, "config.json")) as file:
+            currentdir = os.path.dirname(os.path.realpath(__file__))
+            with open(os.path.join(currentdir, "config.json")) as file:
                 self.__config = dict(json.load(file))
             self.__config.get("DevEUI")
             self.__config.get("AppEUI")
@@ -94,7 +93,8 @@ class App():
 
     def __save_config(self)->bool:
         try:
-            with open(os.path.join(__currentdir, "config.json"), "w") as file:
+            currentdir = os.path.dirname(os.path.realpath(__file__))
+            with open(os.path.join(currentdir, "config.json"), "w") as file:
                 file.write(json.dumps(self.__config, indent=4))
             return True
         except:
