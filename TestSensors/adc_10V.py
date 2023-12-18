@@ -51,7 +51,7 @@ import smbus	# I2Cimport spidev
 # get access to the SMBus (SMBus is a subset of the I2C protocol
 # 0 = /dev/i2c-0 (port I2C0) 
 # 1 = /dev/i2c-1 (port I2C1) *this is the port on the GPIO's of RPi 3 B
-bus = smbus.SMBus(0)    # the 1 means use port I2C1
+bus = smbus.SMBus(1)    # the 1 means use port I2C1
 
 # Address for the device 
 

@@ -5,7 +5,7 @@ import time
 MCP4725_ADDR = 0x61
 
 # I2C kanalını başlat
-bus = smbus.SMBus(0)  # 0 numaralı I2C kanalı kullanılıyor, Raspberry Pi'nin modeline göre değişebilir
+bus = smbus.SMBus(1)  # 0 numaralı I2C kanalı kullanılıyor, Raspberry Pi'nin modeline göre değişebilir
 
 
 def set_voltage(voltage):

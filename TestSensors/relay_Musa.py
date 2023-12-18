@@ -36,7 +36,7 @@ class PCF8574:
 
 relay_ON = 0
 relay_OFF = 1
-pcf8574 = PCF8574(0x20)
+pcf8574 = PCF8574(0x20, rev=1)
 
 
 pcf8574.write(0, relay_ON) # pin0 is HIGH
