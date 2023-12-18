@@ -2,6 +2,7 @@ from LoRaMAC import LoRaMAC
 from LoRaMAC import Region
 from LoRaMAC import Device
 from LoRaMAC import JoinStatus, TransmitStatus, ReceiveStatus
+from Sensors import Relay, Banana
 
 import os
 import json
@@ -20,6 +21,13 @@ class App():
         __device (Device): The device object representing the application's device.
         __LoRaWAN (LoRaMAC): The LoRaMAC object for handling LoRaWAN communication.
     """
+    
+    VOLTAGE_RESOLUTION = 1000
+
+    APP_CHANNEL        = 0xFF
+    TYPE_TIMESTAMP     = 0x00
+    TYPE_RELAY         = 0x01
+    TYPE_BANANA        = 0x02
 
     def __init__(self, region: Region, level: int = logging.DEBUG) -> None:
         """
@@ -39,6 +47,8 @@ class App():
         self.__LoRaWAN = LoRaMAC(self.__device, self.__region)
         self.__LoRaWAN.set_logging_level(level)
         self.__LoRaWAN.set_callback(self.__on_join_callback, self.__on_transmit_callback, self.__on_receive_callback)
+        self.__relay = Relay()
+        self.__banana = Banana()
         self.__logger.info(f"App Initialized")
 
     def run(self):
@@ -50,8 +60,20 @@ class App():
         while True:
             if self.__LoRaWAN.is_joined():
                 self.__logger.info("The device transmits data")
-                self.__LoRaWAN.transmit(bytes([0x01, 0x02, 0x03, 0x04, 0x05, 0x6, 0x07, 0x08, 0x09]), True)
-                time.sleep(899)
+                data = bytearray([App.APP_CHANNEL, App.TYPE_TIMESTAMP])
+                data = data + int(time.time()).to_bytes(4)
+                data = data + bytearray([App.APP_CHANNEL, App.TYPE_RELAY])
+                data = data + int(self.__relay.read_voltage(0) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__relay.read_voltage(1) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__relay.read_voltage(2) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__relay.read_voltage(3) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + bytearray([App.APP_CHANNEL, App.TYPE_BANANA])
+                data = data + int(self.__banana.read_voltage(0) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__banana.read_voltage(1) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__banana.read_voltage(2) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(self.__banana.read_voltage(3) * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                self.__LoRaWAN.transmit(bytes(data), True)
+                time.sleep(299)
             time.sleep(1)
 
 ########################## Config Storage functions
