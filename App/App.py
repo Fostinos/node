@@ -2,12 +2,13 @@ from LoRaMAC import LoRaMAC
 from LoRaMAC import Region
 from LoRaMAC import Device
 from LoRaMAC import JoinStatus, TransmitStatus, ReceiveStatus
-from Sensors import Relay, Banana
 
 import os
 import json
 import time
 import logging
+
+from .Sensors import Relay, Banana
 
 __currentdir = os.path.dirname(os.path.realpath(__file__))
 
