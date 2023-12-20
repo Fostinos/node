@@ -73,12 +73,11 @@ import smbus
 
 class ADS1115():
 
-	def __init__(self, busId:int=1, address:int=0x00):
+	def __init__(self, address:int=0x00, busId:int=1):
 		self.__cmd = None
 		self.__busId = busId
 		self.__address = address
-		self.__smbus = bus = smbus.SMBus(self.__busId) 
-		pass
+		self.__smbus = bus = smbus.SMBus(self.__busId)
 
 
 	def read_channel(self, channel:int=0)->float:

@@ -8,19 +8,21 @@ class DAC5571():
     VOLTAGE_MAX = 3.3
     DAC_RESOLUTION = 4095
 
-    def __init__(self, busId:int=1, address:int=0x00):
+    ADDRESS_DAC_1 = 0x4C
+    ADDRESS_DAC_2 = 0x4D
+
+    def __init__(self, address:int, busId:int=1):
         self.__busId = busId
         self.__address = address
         self.__smbus = smbus.SMBus(self.__busId) 
-        pass
 
 
     def set_voltage(self, voltage:float)->bool:
         try:
+            if voltage < DAC5571.VOLTAGE_MIN:
+                return False
             if voltage > DAC5571.VOLTAGE_MAX:
-                voltage = DAC5571.VOLTAGE_MAX
-            elif voltage < DAC5571.VOLTAGE_MIN:
-                voltage = DAC5571.VOLTAGE_MIN
+                return False
 
             dac_value = int((voltage / DAC5571.VOLTAGE_MAX) * DAC5571.DAC_RESOLUTION)
 
@@ -30,13 +32,3 @@ class DAC5571():
         except:
             return False
         
-
-class MCP4725():
-    
-    def __init__(self, address:int=0x49):
-        self.__dac = DAC5571(address=address)
-        self.__address = address
-    
-
-    def set_voltage(self, voltage:float)->bool:
-        return self.__dac.set_voltage(voltage)
