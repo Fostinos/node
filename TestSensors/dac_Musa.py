@@ -2,7 +2,7 @@ import smbus
 import time
 
 # I2C adresi (MCP4725 için genellikle 0x60)
-MCP4725_ADDR = 0x61
+MCP4725_ADDR = 0x4C
 
 # I2C kanalını başlat
 bus = smbus.SMBus(1)  # 0 numaralı I2C kanalı kullanılıyor, Raspberry Pi'nin modeline göre değişebilir

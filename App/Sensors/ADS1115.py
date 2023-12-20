@@ -82,12 +82,15 @@ class ADS1115():
 
 
 	def read_channel(self, channel:int=0)->float:
-		if channel < 0 or channel > 3:
-			return -1.0
-		self.__build_read_command(channel)
-		self.__send_command()
-		self.__wait()
-		return self.__read_adc_value()
+		try:
+			if channel < 0 or channel > 3:
+				return -1.0
+			self.__build_read_command(channel)
+			self.__send_command()
+			self.__wait()
+			return self.__read_adc_value()
+		except:
+			return -2.0
 
 
 	def __read_adc_value(self)->float:
