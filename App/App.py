@@ -195,23 +195,23 @@ class App():
             cmd_type = cmd[index]
             index = index + 1
             if cmd_type == App.TYPE_UPLINK_INTERVAL:
-                cmd_state = self.__handle_downlink_uplink_interval(index, cmd)
+                cmd_state = self.__handle_downlink_uplink_interval(cmd, index)
                 if cmd_type is False:
                     break
             if cmd_type == App.TYPE_RELAY_CONTROL:
-                cmd_state = self.__handle_downlink_relay_control(index, cmd)
+                cmd_state = self.__handle_downlink_relay_control(cmd, index)
                 if cmd_type is False:
                     break
             if cmd_type == App.TYPE_RELAY_THRESHOLDS:
-                cmd_state = self.__handle_downlink_relay_thresholds(index, cmd)
+                cmd_state = self.__handle_downlink_relay_thresholds(cmd, index)
                 if cmd_type is False:
                     break
             elif cmd_type == App.TYPE_DAC_1:
-                cmd_state = self.__handle_downlink_dac_1(index, cmd)
+                cmd_state = self.__handle_downlink_dac_1(cmd, index)
                 if cmd_type is False:
                     break
             elif cmd_type == App.TYPE_DAC_2:
-                cmd_state = self.__handle_downlink_dac_2(index, cmd)
+                cmd_state = self.__handle_downlink_dac_2(cmd, index)
                 if cmd_type is False:
                     break
             elif cmd_type >= App.TYPE_PIN_0 and cmd_type <= App.TYPE_PIN_7:
@@ -289,14 +289,12 @@ class App():
     def __handle_downlink_relay_thresholds(self, cmd:list, index:int)->bool:
         try:
             thresholds = []
-            self.__logger.debug(f"Thresholds")
             for i in range(self.__port.TOTAL_PIN):
                 integer = self.__get_integer_from_command(cmd, index)
                 index = index + 4
                 if integer is None:
                     return False
                 thresholds.append(float(integer) / App.VOLTAGE_RESOLUTION)
-            self.__logger.debug(f"New Threshold {thresholds}")
             old_thresholds = self.__config[CONFIG_NAME][RELAY_THRESHOLD_NAME]
             self.__config[CONFIG_NAME][RELAY_THRESHOLD_NAME] = thresholds
             if self.__save_config():
@@ -310,11 +308,9 @@ class App():
     def __handle_downlink_dac_1(self, cmd:list, index:int)->bool:
         try:
             integer = self.__get_integer_from_command(cmd, index)
-            self.__logger.debug(f"DAC1")
             if integer is None: 
                 return False
             dac_value = float(integer) / App.VOLTAGE_RESOLUTION
-            self.__logger.debug(f"Set DAC1 voltage to {dac_value}")
             return self.__dac1.set_voltage(dac_value)
         except:
             return False
@@ -334,14 +330,12 @@ class App():
             if index > len(cmd):
                 return False
             state_not_verified = cmd[index]
-            self.__logger.debug(f"GPIO")
             if pin_not_verified < GPIO.PIN_0 or pin_not_verified > GPIO.PIN_7:
                 return False
             pin = GPIO(pin_not_verified)
-            if state_not_verified != PinState.LOW or state_not_verified != PinState.HIGH:
+            if state_not_verified != PinState.LOW and state_not_verified != PinState.HIGH:
                 return False
             state = PinState(state_not_verified)
-            self.__logger.debug(f"Set Pin {pin} to {state}")
             return self.__port.write(pin, state)
         except:
             return False
