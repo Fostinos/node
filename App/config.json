@@ -5,6 +5,6 @@
     "config": {
         "RelayControl": true,
         "RelayThresholds":[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        "UplinkInterval": 300
+        "UplinkInterval": 60
     }
 }
