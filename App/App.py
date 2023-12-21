@@ -230,10 +230,10 @@ class App():
         
         if cmd_state is True:
             self.__logger.info(f'CMD_SUCCESS')
-            self.__LoRaWAN.transmit(bytes[App.CMD_SUCCESS])
+            self.__LoRaWAN.transmit(bytes([App.CMD_SUCCESS]))
         else:
             self.__logger.warning(f'CMD_FAILURE')
-            self.__LoRaWAN.transmit(bytes[App.CMD_FAILURE])
+            self.__LoRaWAN.transmit(bytes([App.CMD_FAILURE]))
         
         if cmd_response is not None:
             self.__LoRaWAN.transmit(bytes(cmd_response))
@@ -341,6 +341,7 @@ class App():
                 pin = GPIO(i)
                 state = self.__port.read(pin)
                 data = data + bytearray([state])
+                self.__logger.debug(f"GPIO States = {data.hex()}")
             return bytes(data)
         except:
             return None
