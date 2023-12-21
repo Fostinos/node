@@ -30,6 +30,7 @@ class App():
     
     VOLTAGE_RESOLUTION         = 1000
     LORAWAN_REJOIN_INTERVAL    = 86400 # 1 day (rejoin network after 1 day to renew session keys and frame counters)
+    DELAY_PER_LOOP             = 0.1
 
     RELAY_CONTROL_MANUAL       = 0x00
     RELAY_CONTROL_AUTOMATIC    = 0x01
@@ -111,7 +112,8 @@ class App():
                 time.sleep(1)
                 continue
 
-            if time.time() > (self.__last_transmit_timestamp + self.__config[CONFIG_NAME][UPLINK_INTERVAL_NAME]):
+            if (time.time() + App.DELAY_PER_LOOP) > (self.__last_transmit_timestamp + \
+                                                     self.__config[CONFIG_NAME][UPLINK_INTERVAL_NAME]):
                 self.__last_transmit_timestamp = time.time()
                 self.__logger.info("The device transmits data")
                 data = bytearray([App.APP_CHANNEL, App.TYPE_TIMESTAMP])
@@ -126,8 +128,8 @@ class App():
                 self.__LoRaWAN.transmit(bytes(data))
                 time.sleep(1)
             
-            # minimum sleep (!important)
-            time.sleep(0.1)
+            # minimum delay (!important)
+            time.sleep(App.DELAY_PER_LOOP)
 
     def __read_channels(self):
         for i in range(self.__port.TOTAL_PIN):
