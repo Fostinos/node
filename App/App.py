@@ -222,11 +222,15 @@ class App():
                 if cmd_response is None:
                     cmd_state = False
                     break
+                else:
+                    cmd_state = True
             elif cmd_type == App.TYPE_READ_RELAY_THRESHOLDS:
                 cmd_response = self.__handle_downlink_read_relay_thresholds()
                 if cmd_response is None:
                     cmd_state = False
                     break
+                else:
+                    cmd_state = True
         
         if cmd_state is True:
             self.__logger.info(f'CMD_SUCCESS')
