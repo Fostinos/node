@@ -17,8 +17,8 @@ class GPIO(IntEnum):
 
 
 class PinState(IntEnum):
-	LOW     = 1
-	HIGH    = 0
+	LOW     = 0
+	HIGH    = 1
 
 
 
@@ -38,7 +38,7 @@ class PCF8574():
 			data = 0x00
 			self.__pin_states[pin] = state
 			for pin_number, pin_state in enumerate(self.__pin_states):
-				if pin_state == 1:
+				if pin_state:
 					data = data +  2**pin_number
 			self.__smbus.write_byte(self.__address, data)
 			return True
