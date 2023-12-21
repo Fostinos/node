@@ -86,7 +86,7 @@ class App():
         self.__port = PCF8574()
         self.__dac1 = DAC5571(address=DAC5571.ADDRESS_DAC_1)
         self.__dac2 = DAC5571(address=DAC5571.ADDRESS_DAC_2)
-        self.__adc_channels = list()
+        self.__adc_channels = [0]*self.__port.TOTAL_PIN
         self.__logger.info(f"App Initialized")
 
     def run(self):
