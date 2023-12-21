@@ -123,7 +123,7 @@ class App():
                     index = index + 1
                     if index == 4:
                         data = data + bytearray([App.APP_CHANNEL, App.TYPE_RELAY])
-                self.__LoRaWAN.transmit(bytes(data), True)
+                self.__LoRaWAN.transmit(bytes(data))
                 time.sleep(1)
             
             # minimum sleep (!important)
@@ -236,7 +236,7 @@ class App():
             self.__LoRaWAN.transmit(bytes[App.CMD_FAILURE])
         
         if cmd_response is not None:
-            self.__LoRaWAN.transmit(bytes(cmd_response), confirmed=True)
+            self.__LoRaWAN.transmit(bytes(cmd_response))
 
     def __get_integer_from_command(self, cmd:list, index:int)->int:
             if index + 3 >= len(cmd): 
