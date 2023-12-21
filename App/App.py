@@ -125,6 +125,9 @@ class App():
                         data = data + bytearray([App.APP_CHANNEL, App.TYPE_RELAY])
                 self.__LoRaWAN.transmit(bytes(data), True)
                 time.sleep(1)
+            
+            # minimum sleep (!important)
+            time.sleep(0.1)
 
     def __read_channels(self):
         for i in range(self.__port.TOTAL_PIN):
