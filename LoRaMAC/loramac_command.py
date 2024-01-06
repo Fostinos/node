@@ -42,3 +42,4 @@ class MacCommand():
             if cid == CID.LinkADR:
                 self.__LinkADRAns(mac_cmd[index:index+4])
                 index = index + 4
+            index = index + 1
