@@ -179,10 +179,11 @@ class WrapperLoRaMAC :
         for i in range(mac.FHDR.FCtrl.downlink.FOptsLen):
             fOpts.append(mac.FHDR.FOpts[i])
         output["MacPayload"]=bytes(macPayload)
-        output["MacPayload"]=bytes(fOpts)
+        output["FOpts"]=bytes(fOpts)
         output["ADR"]=bool(mac.FHDR.FCtrl.downlink.ADR)
         output["RFU"]=bool(mac.FHDR.FCtrl.downlink.RFU)
         output["ACK"]=bool(mac.FHDR.FCtrl.downlink.ACK)
+        output["FOptsLen"]=bool(mac.FHDR.FCtrl.downlink.FOptsLen)
         output["FPending"]=bool(mac.FHDR.FCtrl.downlink.FPending)
         output["FCntDown"]=int(mac.FHDR.FCnt16)
         output["FPortDown"]=int(mac.FPort)
