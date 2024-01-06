@@ -1,3 +1,0 @@
-
-# Create the shared library
-gcc -shared -o loramac.so -fPIC ./LoRaMAC/*.c
