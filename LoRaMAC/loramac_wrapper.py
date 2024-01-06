@@ -90,7 +90,7 @@ class WrapperLoRaMAC :
     
 
     @staticmethod
-    def unconfirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False, fOpts:bytes=None) -> dict:
+    def unconfirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=True, ack:bool=False, fOpts:bytes=None) -> dict:
 
         payload = tuple(MacPayload)
         nwkSKey = tuple(NwkSKey)
@@ -123,7 +123,7 @@ class WrapperLoRaMAC :
         return output
 
     @staticmethod
-    def confirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False, fOpts:bytes=None) -> dict:
+    def confirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=True, ack:bool=False, fOpts:bytes=None) -> dict:
         
         payload = tuple(MacPayload)
         nwkSKey = tuple(NwkSKey)
