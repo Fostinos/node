@@ -500,7 +500,6 @@ class LoRaMAC():
             
             if response is None:
                 return False
-            print("Downlink info", response)
             if response["FOptsLen"] > 0:
                 self._Mac.handle_mac_command(response["FOpts"])
             self._device.downlinkMacPayload = response["MacPayload"]
