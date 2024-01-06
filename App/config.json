@@ -3,8 +3,17 @@
     "AppEUI": "1d42fbec13160990",
     "AppKey": "4fe6e906d37fd200f25f82f7df6ba0dd",
     "config": {
-        "RelayControl": true,
-        "RelayThresholds":[1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
-        "UplinkInterval": 60
+        "RelayControl": false,
+        "RelayThresholds": [
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0,
+            1.0
+        ],
+        "UplinkInterval": 20
     }
 }
