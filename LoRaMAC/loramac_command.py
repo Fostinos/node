@@ -22,9 +22,9 @@ class MacCommand():
         pass
         
     def __LinkADRAns(self, LinkADRReq:list):
-        PowerACK = 0
-        DataRateACK = 0 
-        ChannelMaskACK = 0
+        PowerACK = 1
+        DataRateACK = 1
+        ChannelMaskACK = 1
         LinkADRAns = [CID.LinkADR]
         LinkADRAns.append(0x00 | (PowerACK << 2) | (DataRateACK << 1) | (ChannelMaskACK << 0))
         self.answer = bytes(LinkADRAns)
