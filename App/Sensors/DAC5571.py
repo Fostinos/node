@@ -8,8 +8,8 @@ class DAC5571():
     VOLTAGE_MAX = 3.3
     DAC_RESOLUTION = 4095
 
-    ADDRESS_DAC_1 = 0x4C
-    ADDRESS_DAC_2 = 0x4D
+    ADDRESS_DAC_1 = 0x60
+    ADDRESS_DAC_2 = 0x61
 
     def __init__(self, address:int, busId:int=1):
         self.__busId = busId
