@@ -492,7 +492,7 @@ class LoRaMAC():
             DevAddr = bytearray(self._device.downlinkPhyPayload[1:5])
             DevAddr.reverse()
             if int(DevAddr.hex(), 16) != int(self._device.DevAddr.hex(), 16):
-                self._logger.debug(f"LoRaWAN : Downlink DevAddr Mismatching {DevAddr.hex()} != {self._device.DevAddr.hex()}")
+                self._logger.debug(f"LoRaWAN : Unknown device data received")
                 return False
             
             response = WrapperLoRaMAC.data_down(self._device.downlinkPhyPayload, self._device.DevAddr,
