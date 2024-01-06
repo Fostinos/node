@@ -497,7 +497,7 @@ class LoRaMAC():
             
             if response is None:
                 return False
-            
+            print("Downlink info", response)
             self._device.downlinkMacPayload = response["MacPayload"]
             self._device.Adr = response["ADR"]
             self._device.Rfu = response["RFU"]
