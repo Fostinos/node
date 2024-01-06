@@ -4,6 +4,7 @@ from .loramac_types import MessageType
 from .loramac_region import Region
 from .loramac_device import Device
 from .loramac_status import JoinStatus, TransmitStatus, ReceiveStatus, RadioStatus
+from .loramac_command import MacCommand
 from .loramac_settings import *
 from .LoRaRF import SX126x
 
@@ -78,6 +79,7 @@ class LoRaMAC():
         self._channel = self._region.value.UPLINK_CHANNEL_MIN
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         self._LoRa = SX126x()
+        self._Mac = MacCommand()
         self._db = Database()
         self._db.open()
         # Create table if not exists
@@ -242,6 +244,7 @@ class LoRaMAC():
             self.__radio_rx1_mode()
             self._device.rx2_window_time = time.time() + UPLINK_RX2_DELAY
             self._LoRaSemaphore.release()
+            self._Mac.answer = None
             return True
         else:
             # Transmit error
@@ -466,12 +469,12 @@ class LoRaMAC():
             if not confirmed:
                 response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            ack=self._device.Ack)
+                                                            ack=self._device.Ack, fOpts=self._Mac.answer)
             else:
                 self._device.AckDown = False
                 response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            ack=self._device.Ack)
+                                                            ack=self._device.Ack, fOpts=self._Mac.answer)
             self._db.open()
             self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
             self._db.close()
@@ -498,6 +501,8 @@ class LoRaMAC():
             if response is None:
                 return False
             print("Downlink info", response)
+            if response["FOptsLen"] > 0:
+                self._Mac.handle_mac_command(response["FOpts"])
             self._device.downlinkMacPayload = response["MacPayload"]
             self._device.Adr = response["ADR"]
             self._device.Rfu = response["RFU"]

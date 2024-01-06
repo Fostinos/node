@@ -90,15 +90,21 @@ class WrapperLoRaMAC :
     
 
     @staticmethod
-    def unconfirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False) -> dict:
+    def unconfirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False, fOpts:bytes=None) -> dict:
 
         payload = tuple(MacPayload)
         nwkSKey = tuple(NwkSKey)
         appSKey = tuple(AppSKey)
-
-        FHDR_FCtrl_uplink_data = FHDR_FCtrl_uplink_t(adr, False, ack, False, 0)
+        fOptsLen = 0
+        if fOpts != None:
+            fOptsLen = len(fOpts)
+            
+        FHDR_FCtrl_uplink_data = FHDR_FCtrl_uplink_t(adr, False, ack, False, fOptsLen)
         FHDR_FCtrl_data = FHDR_FCtrl_t((),FHDR_FCtrl_uplink_data)
+
         FOpts = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_MAX_FOPTS_LEN)()
+        if fOpts != None:
+            ctypes.memmove(ctypes.addressof(FOpts), fOpts, fOptsLen)
 
         FHDR_data = FHDR_t(int(DevAddr.hex(), 16), FHDR_FCtrl_data, FCnt, FOpts)
 
@@ -117,15 +123,21 @@ class WrapperLoRaMAC :
         return output
 
     @staticmethod
-    def confirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False) -> dict:
+    def confirmed_data_up(MacPayload:bytes, FCnt:int, FPort:int, DevAddr:bytes, NwkSKey:bytes, AppSKey:bytes, adr:bool=False, ack:bool=False, fOpts:bytes=None) -> dict:
         
         payload = tuple(MacPayload)
         nwkSKey = tuple(NwkSKey)
         appSKey = tuple(AppSKey)
-
-        FHDR_FCtrl_uplink_data = FHDR_FCtrl_uplink_t(adr, False, ack, False, 0)
+        fOptsLen = 0
+        if fOpts != None:
+            fOptsLen = len(fOpts)
+            
+        FHDR_FCtrl_uplink_data = FHDR_FCtrl_uplink_t(adr, False, ack, False, fOptsLen)
         FHDR_FCtrl_data = FHDR_FCtrl_t((),FHDR_FCtrl_uplink_data)
+
         FOpts = (ctypes.c_uint8 * WrapperLoRaMAC.LORAWAN_MAX_FOPTS_LEN)()
+        if fOpts != None:
+            ctypes.memmove(ctypes.addressof(FOpts), fOpts, fOptsLen)
 
         FHDR_data = FHDR_t(int(DevAddr.hex(), 16), FHDR_FCtrl_data, FCnt, FOpts)
 
