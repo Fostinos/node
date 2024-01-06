@@ -183,8 +183,8 @@ class WrapperLoRaMAC :
         output["ADR"]=bool(mac.FHDR.FCtrl.downlink.ADR)
         output["RFU"]=bool(mac.FHDR.FCtrl.downlink.RFU)
         output["ACK"]=bool(mac.FHDR.FCtrl.downlink.ACK)
-        output["FOptsLen"]=int(mac.FHDR.FCtrl.downlink.FOptsLen)
         output["FPending"]=bool(mac.FHDR.FCtrl.downlink.FPending)
+        output["FOptsLen"]=int(mac.FHDR.FCtrl.downlink.FOptsLen)
         output["FCntDown"]=int(mac.FHDR.FCnt16)
         output["FPortDown"]=int(mac.FPort)
 
