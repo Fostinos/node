@@ -72,6 +72,9 @@ import smbus
 
 
 class ADS1115():
+    
+	ADC_RESOLUTION = 32767.0
+	GAIN = 4.096
 
 	def __init__(self, address:int=0x00, busId:int=1):
 		self.__cmd = None
@@ -95,7 +98,7 @@ class ADS1115():
 	def __read_adc_value(self)->float:
 		# read result (note byte swap)
 		result = self.__swap(self.__smbus.read_word_data(self.__address, DEVICE_REG_CONVERSION))
-		return (result/32768.0) * 4.096 #32767?
+		return (result/ADS1115.ADC_RESOLUTION) * ADS1115.GAIN
 
 	def __wait(self):
 		# wait for conversion to complete (blocking)
@@ -131,7 +134,7 @@ class ADS1115():
 
 class Relay():
 
-	ADC_FACTOR = 3.024379
+	ADC_FACTOR = 3.025
 	
 	def __init__(self, address:int=0x49):
 		self.__adc = ADS1115(address=address)
@@ -145,7 +148,7 @@ class Relay():
 
 class Banana():
 
-	ADC_FACTOR = 3.024379
+	ADC_FACTOR = 3.025
 	
 	def __init__(self, address:int=0x48):
 		self.__adc = ADS1115(address=address)
