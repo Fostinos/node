@@ -875,6 +875,7 @@ class SX126x(BaseLoRa) :
         if self._statusWait == self.STATUS_RX_CONTINUOUS :
             self._statusIrq = 0x0000
 
+        self._logger.info(f"IRQ Status 0x{statusIrq:02X}")
         # get status for transmit and receive operation based on status IRQ
         if statusIrq & self.IRQ_TIMEOUT :
             if self._statusWait == self.STATUS_TX_WAIT : return self.STATUS_TX_TIMEOUT
@@ -1286,8 +1287,9 @@ class SX126x(BaseLoRa) :
         value = buf[0] & 0xFB
         if invertIq :
             value = buf[0] | 0x04
-        self._logger.info(f"Fixing IQ polarization 0x{(buf[0] & 0xFB):02X} -> 0x{value:02X}")
         self.writeRegister(self.REG_IQ_POLARITY_SETUP, (value,), 1)
+        buf2 = self.readRegister(self.REG_IQ_POLARITY_SETUP, 1)
+        self._logger.info(f"Fixing IQ polarization 0x{(buf[0] & 0xFB):02X} -> 0x{value:02X} -> 0x{buf2:02X}")
 
 ### SX126X API: UTILITIES ###
 
