@@ -413,12 +413,15 @@ class LoRaMAC():
         self._LoRa.wait()
         self._logger.info(f"__radio_receive: get modem IRQ status")
         status = self._LoRa.status()
-        if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
-            self._logger.error(f"RX  : LoRa {RadioStatus(status)}")
+        if status != self._LoRa.STATUS_RX_DONE:
+            self._logger.warning(f"RX  : LoRa {RadioStatus(status)}")
             self._LoRa.clearDeviceErrors()
             self._LoRa.purge(self._LoRa.available())
             return bytes([])
-        return self._LoRa.get(self._LoRa.available())
+        rx_length = self._LoRa.available()
+        rx_bytes = self._LoRa.get(rx_length)
+        self._logger.info(f"Rx bytes[{rx_length}]: {rx_bytes}")
+        return rx_bytes
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
 
