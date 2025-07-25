@@ -1286,6 +1286,7 @@ class SX126x(BaseLoRa) :
         value = buf[0] & 0xFB
         if invertIq :
             value = buf[0] | 0x04
+        self._logger.info(f"Fixing IQ polarization 0x{(buf[0] & 0xFB):02X} -> 0x{value:02X}")
         self.writeRegister(self.REG_IQ_POLARITY_SETUP, (value,), 1)
 
 ### SX126X API: UTILITIES ###

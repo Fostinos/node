@@ -379,7 +379,7 @@ class LoRaMAC():
     
     def __radio_rx1_mode(self):
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
-        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
+        #self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.downlink_frequency(self._channel))
@@ -389,7 +389,7 @@ class LoRaMAC():
         
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
-        self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
+        #self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setRxGain(self._LoRa.RX_GAIN_BOOSTED)
         self._LoRa.setFrequency(self._region.value.RX2_FREQUENCY)
