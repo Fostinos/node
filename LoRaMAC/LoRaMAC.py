@@ -16,7 +16,7 @@ import time
 logging.basicConfig(format='%(asctime)s.%(msecs)03d   %(levelname)-8s %(name)s: %(message)s',
                 level=logging.DEBUG, datefmt='%Y-%m-%d %H:%M:%S')
 
-
+logging.getLogger("DRIVER[SX126x]").setLevel(logging.INFO)
 class LoRaMAC():
     """
     The `LoRaMAC` class is a Python implementation of a LoRaWAN MAC layer. 
