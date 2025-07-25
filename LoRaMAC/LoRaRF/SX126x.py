@@ -880,9 +880,9 @@ class SX126x(BaseLoRa) :
             if self._statusWait == self.STATUS_TX_WAIT : return self.STATUS_TX_TIMEOUT
             else : return self.STATUS_RX_TIMEOUT
         elif statusIrq & self.IRQ_HEADER_ERR : return self.STATUS_HEADER_ERR
+        elif statusIrq & self.IRQ_RX_DONE : return self.STATUS_RX_DONE
         elif statusIrq & self.IRQ_CRC_ERR : return self.STATUS_CRC_ERR
         elif statusIrq & self.IRQ_TX_DONE : return self.STATUS_TX_DONE
-        elif statusIrq & self.IRQ_RX_DONE : return self.STATUS_RX_DONE
 
         # return TX or RX wait status
         return self._statusWait
