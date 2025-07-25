@@ -402,14 +402,11 @@ class LoRaMAC():
         self._LoRa.write(list(self._device.uplinkPhyPayload), len(self._device.uplinkPhyPayload))
         self._LoRa.endPacket()
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
-        time.sleep(0.3)
-        ret = self._LoRa.wait(0.2)
-        self._LoRa.status()
-        return ret
+        time.sleep(delay - 0.4)
+        return self._LoRa.wait()
 
     def __radio_receive(self, delay:int)-> bytes:
-        #if not self._LoRa.wait(delay):
-            #return bytes([])
+        self._LoRa.wait()
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
             self._logger.error(f"RX  : LoRa {RadioStatus(status)}")
