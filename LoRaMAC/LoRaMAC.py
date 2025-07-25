@@ -81,19 +81,19 @@ class LoRaMAC():
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         self._LoRa = SX126x()
         self._Mac = MacCommand()
-        self._db = Database()
-        self._db.open()
+        db = Database()
+        db.open()
         # Create table if not exists
-        self._db.create_table()
+        db.create_table()
         # Get device info if exists
-        device_dict = self._db.get_device(device.DevEUI.hex())
+        device_dict = db.get_device(device.DevEUI.hex())
         if device_dict is None:
             # Insert device info if not exists
-            self._db.insert_device(device.DevEUI.hex(), device.AppEUI.hex(), device.AppKey.hex())
+            db.insert_device(device.DevEUI.hex(), device.AppEUI.hex(), device.AppKey.hex())
         else:
             # Restore device if exists
             self._device.set_device(device_dict)
-        self._db.close()
+        db.close()
         self._LoRaSemaphore = Semaphore()
         self._LoRaSemaphore.release()
         self._thread = Thread(target=self.__background_task, name="LoRaMAC Service", daemon=True)
@@ -351,9 +351,10 @@ class LoRaMAC():
 
     def __increment_device_channel_group(self):
         self._device.channelGroup = (self._device.channelGroup + 1) % 8
-        self._db.open()
-        self._db.update_channel_group(self._device.DevEUI.hex(), self._device.channelGroup)
-        self._db.close()
+        db = Database()
+        db.open()
+        db.update_channel_group(self._device.DevEUI.hex(), self._device.channelGroup)
+        db.close()
         self._device.uplink_channel_min = self._region.value.UPLINK_CHANNEL_MIN + 8 * self._device.channelGroup
         self._device.uplink_channel_max = self._device.uplink_channel_min + 7 * (self._device.channelGroup + 1)
         if self._device.uplink_channel_max > self._region.value.UPLINK_CHANNEL_MAX:
@@ -429,9 +430,10 @@ class LoRaMAC():
         try:
             self._device.DevNonce = random.randint(1, 65535)
             response = WrapperLoRaMAC.join_request(self._device.DevEUI, self._device.AppEUI, self._device.AppKey, self._device.DevNonce)
-            self._db.open()
-            self._db.update_dev_nonce(self._device.DevEUI.hex(), self._device.DevNonce)
-            self._db.close()
+            db = Database()
+            db.open()
+            db.update_dev_nonce(self._device.DevEUI.hex(), self._device.DevNonce)
+            db.close()
             if response["PHYPayload"] is None:
                 self._logger.debug(f"LoRaWAN : JoinRequest Failed")
                 return False
@@ -452,11 +454,12 @@ class LoRaMAC():
             self._device.NwkSKey = bytes(response["NwkSKey"])
             self._device.AppSKey = bytes(response["AppSKey"])
             self._device.FCnt = 0
-            self._db.open()
-            self._db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
+            db = Database()
+            db.open()
+            db.update_session_keys(self._device.DevEUI.hex(), self._device.DevAddr.hex(), 
                                         self._device.NwkSKey.hex(), self._device.AppSKey.hex())
-            self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
-            self._db.close()
+            db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
+            db.close()
             return True
         except Exception as e:
             self._logger.error(f"LoRaWAN : Join Accept {e}")
@@ -476,9 +479,10 @@ class LoRaMAC():
                 response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
                                                             ack=self._device.Ack, fOpts=self._Mac.answer)
-            self._db.open()
-            self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
-            self._db.close()
+            db = Database()
+            db.open()
+            db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
+            db.close()
             if response["PHYPayload"] is None:
                 self._logger.debug(f"LoRaWAN : Uplink Failed")
                 return False
