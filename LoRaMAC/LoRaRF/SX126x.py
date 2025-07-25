@@ -349,7 +349,6 @@ class SX126x(BaseLoRa) :
         t = time.time()
         while gpio.input(self._busy) == gpio.HIGH :
             if (time.time() - t) > (timeout / 1000) : return True
-        self._logger.error("Device busy timeout")
         return False
 
     def setFallbackMode(self, fallbackMode) :
@@ -656,7 +655,9 @@ class SX126x(BaseLoRa) :
     def endPacket(self, timeout: int = TX_SINGLE) -> bool :
 
         # skip to enter TX mode when previous TX operation incomplete
-        if self.getMode == self.STATUS_MODE_TX : return False
+        if self.getMode() == self.STATUS_MODE_TX :
+            self._logger.warning("Device still in previous TX mode")
+            return False
 
         # clear previous interrupt and set TX done, and TX timeout as interrupt source
         self._irqSetup(self.IRQ_TX_DONE | self.IRQ_TIMEOUT)
@@ -839,7 +840,6 @@ class SX126x(BaseLoRa) :
             if self._irq == -1 : irqStat = self.getIrqStatus()
             # return when timeout reached
             if (time.time() - t) > timeout and timeout > 0 :
-                self._logger.warning("Operation timeout")
                 return False
 
         if self._statusIrq :
@@ -1004,6 +1004,7 @@ class SX126x(BaseLoRa) :
         self._writeBytes(0xC1, (), 0)
 
     def setTx(self, timeout: int) :
+        self._logger.debug(f"Setting TX timeout to {timeout} ms")
         buf = (
             (timeout >> 16) & 0xFF,
             (timeout >> 8) & 0xFF,
@@ -1012,6 +1013,7 @@ class SX126x(BaseLoRa) :
         self._writeBytes(0x83, buf, 3)
 
     def setRx(self, timeout: int) :
+        self._logger.debug(f"Setting RX timeout to {timeout} ms")
         buf = (
             (timeout >> 16) & 0xFF,
             (timeout >> 8) & 0xFF,
@@ -1278,12 +1280,14 @@ class SX126x(BaseLoRa) :
 
     def _writeBytes(self, opCode: int, data: tuple, nBytes: int) :
         if self.busyCheck() : return
+        self._logger.debug(f"_writeBytes: opCode={opCode}, data={data}, nBytes={nBytes}")
         buf = [opCode]
         for i in range(nBytes) : buf.append(data[i])
         spi.xfer2(buf)
 
     def _readBytes(self, opCode: int, nBytes: int, address: tuple = (), nAddress: int = 0) -> tuple :
         if self.busyCheck() : return ()
+        self._logger.debug(f"_readBytes: opCode={opCode}, nBytes={nBytes}, address={address}, nAddress={nAddress}")
         buf = [opCode]
         for i in range(nAddress) : buf.append(address[i])
         for i in range(nBytes) : buf.append(0x00)
