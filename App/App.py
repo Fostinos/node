@@ -90,6 +90,15 @@ class App():
         self.__adc_channels = [0]*self.__port.TOTAL_PIN
         self.__logger.info(f"App Initialized")
 
+        
+        self.__handlers = {
+            App.TYPE_UPLINK_INTERVAL: self.__handle_downlink_uplink_interval,
+            App.TYPE_RELAY_CONTROL: self.__handle_downlink_relay_control,
+            App.TYPE_RELAY_THRESHOLDS: self.__handle_downlink_relay_thresholds,
+            App.TYPE_DAC_1: self.__handle_downlink_dac_1,
+            App.TYPE_DAC_2: self.__handle_downlink_dac_2,
+        }
+
     def run(self):
         """
         Runs The `App` continuously
@@ -194,30 +203,14 @@ class App():
             index = index + 1
             cmd_type = cmd[index]
             index = index + 1
-            if cmd_type == App.TYPE_UPLINK_INTERVAL:
-                cmd_state = self.__handle_downlink_uplink_interval(cmd, index)
-                if cmd_type is False:
-                    break
-            if cmd_type == App.TYPE_RELAY_CONTROL:
-                cmd_state = self.__handle_downlink_relay_control(cmd, index)
-                if cmd_type is False:
-                    break
-            if cmd_type == App.TYPE_RELAY_THRESHOLDS:
-                cmd_state = self.__handle_downlink_relay_thresholds(cmd, index)
-                if cmd_type is False:
-                    break
-            elif cmd_type == App.TYPE_DAC_1:
-                cmd_state = self.__handle_downlink_dac_1(cmd, index)
-                if cmd_type is False:
-                    break
-            elif cmd_type == App.TYPE_DAC_2:
-                cmd_state = self.__handle_downlink_dac_2(cmd, index)
-                if cmd_type is False:
+            if cmd_type in self.__handlers:
+                cmd_state = self.__handlers[cmd_type](cmd, index)
+                if cmd_state is False:
                     break
             elif cmd_type >= App.TYPE_PIN_0 and cmd_type <= App.TYPE_PIN_7:
                 pin_not_verified = cmd_type - App.TYPE_PIN_0
                 cmd_state = self.__handle_downlink_write_pin_state(cmd, index, pin_not_verified)
-                if cmd_type is False:
+                if cmd_state is False:
                     break
             elif cmd_type == App.TYPE_READ_PIN_STATES:
                 cmd_response = self.__handle_downlink_read_pin_states()

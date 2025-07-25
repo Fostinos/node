@@ -1,4 +1,5 @@
 from .base import BaseLoRa
+import logging
 import spidev
 import RPi.GPIO
 import time
@@ -291,6 +292,7 @@ class SX126x(BaseLoRa) :
 
     def begin(self, bus: int = _bus, cs: int = _cs, reset: int = _reset, busy: int = _busy, irq: int = _irq, txen: int = _txen, rxen: int = _rxen, wake: int = _wake) :
 
+        self._logger = logging.getLogger("DRIVER[SX126x]")
         # set spi and gpio pins
         self.setSpi(bus, cs)
         self.setPins(reset, busy, irq, txen, rxen, wake)
@@ -300,6 +302,7 @@ class SX126x(BaseLoRa) :
         # check if device connect and set modem to LoRa
         self.setStandby(self.STANDBY_RC)
         if self.getMode() != self.STATUS_MODE_STDBY_RC :
+            self._logger.error("Device not connected or not in standby mode")
             return False
         self.setPacketType(self.LORA_MODEM)
         self._fixResistanceAntenna()
@@ -346,6 +349,7 @@ class SX126x(BaseLoRa) :
         t = time.time()
         while gpio.input(self._busy) == gpio.HIGH :
             if (time.time() - t) > (timeout / 1000) : return True
+        self._logger.error("Device busy timeout")
         return False
 
     def setFallbackMode(self, fallbackMode) :
@@ -834,7 +838,9 @@ class SX126x(BaseLoRa) :
             # only check IRQ status register for non interrupt operation
             if self._irq == -1 : irqStat = self.getIrqStatus()
             # return when timeout reached
-            if (time.time() - t) > timeout and timeout > 0 : return False
+            if (time.time() - t) > timeout and timeout > 0 :
+                self._logger.warning("Operation timeout")
+                return False
 
         if self._statusIrq :
             # immediately return when interrupt signal hit

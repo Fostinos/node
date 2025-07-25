@@ -84,6 +84,13 @@ class ADS1115():
 
 
 	def read_channel(self, channel:int=0)->float:
+		"""
+		Reads a specific channel from the ADS1115 sensor.
+		Args:
+			channel (int): The channel to read (0-3).
+		Returns:
+			float: The voltage read from the specified channel, or -1.0 if the channel is invalid, or -2.0 if an error occurs.
+		"""
 		try:
 			if channel < 0 or channel > 3:
 				return -1.0
@@ -142,6 +149,13 @@ class Relay():
 	
 
 	def read_voltage(self, channel:int)->float:
+		"""
+		Reads the voltage from a specific channel of the relay.
+		Args:
+			channel (int): The channel to read (0-3).
+		Returns: 
+			float: The voltage read from the specified channel.
+		"""
 		return self.__adc.read_channel(channel) * Relay.ADC_FACTOR
 	
 
@@ -156,4 +170,11 @@ class Banana():
 	
 
 	def read_voltage(self, channel:int)->float:
+		"""
+		Reads the voltage from a specific channel of the banana.
+		Args:
+			channel (int): The channel to read (0-3).
+		Returns: 
+			float: The voltage read from the specified channel.
+		"""
 		return self.__adc.read_channel(channel) * Banana.ADC_FACTOR

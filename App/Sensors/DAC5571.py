@@ -18,6 +18,13 @@ class DAC5571():
 
 
     def set_voltage(self, voltage:float)->bool:
+        """
+        Sets the output voltage of the DAC5571.
+        Args:
+            voltage (float): The voltage to set (between 0.0 and 3.3).
+        Returns:
+            bool: True if the operation was successful, False otherwise.
+        """
         try:
             if voltage < DAC5571.VOLTAGE_MIN:
                 return False
