@@ -420,7 +420,7 @@ class LoRaMAC():
             return bytes([])
         rx_length = self._LoRa.available()
         rx_bytes = self._LoRa.get(rx_length)
-        self._logger.info(f"Rx bytes[{rx_length}]: {rx_bytes}")
+        self._logger.info(f"Rx bytes[{rx_length}]: {rx_bytes.hex()}")
         return rx_bytes
         
 ############################## API using LoRaMAC Wrapper Class to C Shared Library
