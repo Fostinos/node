@@ -841,7 +841,7 @@ class SX126x(BaseLoRa) :
             # return when timeout reached
             if (time.time() - t) > timeout and timeout > 0 :
                 return False
-            time.sleep(0.2)
+            time.sleep(0.5)
 
         if self._statusIrq :
             # immediately return when interrupt signal hit
@@ -1128,6 +1128,7 @@ class SX126x(BaseLoRa) :
 ### SX126X API: RF, MODULATION, AND PACKET COMMANDS ###
 
     def setRfFrequency(self, rfFreq: int) :
+        self._logger.debug(f"Setting RF frequency")
         buf = (
             (rfFreq >> 24) & 0xFF,
             (rfFreq >> 16) & 0xFF,
@@ -1148,6 +1149,7 @@ class SX126x(BaseLoRa) :
         self._writeBytes(0x8E, buf, 2)
 
     def setModulationParamsLoRa(self, sf: int, bw: int, cr: int, ldro: int) :
+        self._logger.debug(f"Setting LoRa Modulation Params")
         buf = (sf, bw, cr, ldro, 0, 0, 0, 0)
         self._writeBytes(0x8B, buf, 8)
 
@@ -1165,6 +1167,7 @@ class SX126x(BaseLoRa) :
         self._writeBytes(0x8B, buf, 8)
 
     def setPacketParamsLoRa(self, preambleLength: int, headerType: int, payloadLength: int, crcType: int, invertIq: int) :
+        self._logger.debug(f"Setting LoRa Packet Params")
         buf = (
             (preambleLength >> 8) & 0xFF,
             preambleLength & 0xFF,
@@ -1214,22 +1217,27 @@ class SX126x(BaseLoRa) :
 ### SX126X API: STATUS COMMANDS ###
 
     def getStatus(self) -> int :
+        self._logger.debug(f"Getting Modem Status")
         buf = self._readBytes(0xC0, 1)
         return buf[0]
 
     def getRxBufferStatus(self) -> tuple :
+        self._logger.debug(f"Getting Rx Buffer Status")
         buf = self._readBytes(0x13, 3)
         return buf[1:3]
 
     def getPacketStatus(self) -> tuple :
+        self._logger.debug(f"Getting Packet Status")
         buf = self._readBytes(0x14, 4)
         return buf[1:4]
 
     def getRssiInst(self) -> int :
+        self._logger.debug(f"Getting RSSI")
         buf = self._readBytes(0x15, 2)
         return buf[1]
 
     def getStats(self) -> tuple :
+        self._logger.debug(f"Getting Stats")
         buf = self._readBytes(0x10, 7)
         return (
             (buf[1] >> 8) | buf[2],
@@ -1238,14 +1246,17 @@ class SX126x(BaseLoRa) :
         )
 
     def resetStats(self) :
+        self._logger.debug(f"Resetting Stats")
         buf = (0, 0, 0, 0, 0, 0)
         self._writeBytes(0x00, buf, 6)
 
     def getDeviceErrors(self) -> int :
+        self._logger.debug(f"Getting Device Errors")
         buf = self._readBytes(0x17, 2)
         return buf[1]
 
     def clearDeviceErrors(self) :
+        self._logger.debug(f"Clearing Device Errors")
         buf = (0, 0)
         self._writeBytes(0x07, buf, 2)
 
@@ -1293,4 +1304,6 @@ class SX126x(BaseLoRa) :
         for i in range(nAddress) : buf.append(address[i])
         for i in range(nBytes) : buf.append(0x00)
         feedback = spi.xfer2(buf)
-        return tuple(feedback[nAddress+1:])
+        data = tuple(feedback[nAddress+1:])
+        self._logger.debug(f"_readBytes: data={data}")
+        return data
