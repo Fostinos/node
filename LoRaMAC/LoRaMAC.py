@@ -194,10 +194,11 @@ class LoRaMAC():
         self._logger.info(f"Joining...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
+        tx_time = time.time()
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = time.time() + JOIN_RX2_DELAY
+            self._device.rx2_window_time = tx_time + JOIN_RX2_DELAY
             self._LoRaSemaphore.release()
             return True
         else:
@@ -240,10 +241,11 @@ class LoRaMAC():
         self._logger.info(f"Transmitting...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
+        tx_time = time.time()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = time.time() + UPLINK_RX2_DELAY
+            self._device.rx2_window_time = tx_time + UPLINK_RX2_DELAY
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -294,12 +296,13 @@ class LoRaMAC():
                     elif callable(self._on_join):
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
-            time.sleep(0.1)
+            time.sleep(0.2)
             self._LoRa.wait(1)
             if self._LoRa.available() == 0:
                 self._LoRaSemaphore.release()
                 continue
 
+            time.sleep(0.2)
             self._device.downlinkPhyPayload = self.__radio_receive(delay=1)
             if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
@@ -412,6 +415,7 @@ class LoRaMAC():
         status = self._LoRa.status()
         if status != self._LoRa.STATUS_RX_DONE and status != self._LoRa.STATUS_TX_DONE:
             self._logger.error(f"RX  : LoRa {RadioStatus(status)}")
+            self._LoRa.clearDeviceErrors()
             self._LoRa.purge(self._LoRa.available())
             return bytes([])
         return self._LoRa.get(self._LoRa.available())
