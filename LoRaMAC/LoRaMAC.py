@@ -458,8 +458,8 @@ class LoRaMAC():
             self._db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
             self._db.close()
             return True
-        except:
-            self._logger.error(f"LoRaWAN : Join Accept")
+        except Exception as e:
+            self._logger.error(f"LoRaWAN : Join Accept {e}")
             return False
 
 
