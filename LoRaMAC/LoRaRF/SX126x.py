@@ -877,14 +877,14 @@ class SX126x(BaseLoRa) :
         if self._statusWait == self.STATUS_RX_CONTINUOUS :
             self._statusIrq = 0x0000
 
-        self._logger.info(f"IRQ Status 0x{statusIrq:02X}")
+        self._logger.info(f"IRQ Status 0x{statusIrq:04X}")
         # get status for transmit and receive operation based on status IRQ
         if statusIrq & self.IRQ_TIMEOUT :
             if self._statusWait == self.STATUS_TX_WAIT : return self.STATUS_TX_TIMEOUT
             else : return self.STATUS_RX_TIMEOUT
         elif statusIrq & self.IRQ_HEADER_ERR : return self.STATUS_HEADER_ERR
-        elif statusIrq & self.IRQ_RX_DONE : return self.STATUS_RX_DONE
         elif statusIrq & self.IRQ_CRC_ERR : return self.STATUS_CRC_ERR
+        elif statusIrq & self.IRQ_RX_DONE : return self.STATUS_RX_DONE
         elif statusIrq & self.IRQ_TX_DONE : return self.STATUS_TX_DONE
 
         # return TX or RX wait status
