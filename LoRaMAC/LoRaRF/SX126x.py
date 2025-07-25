@@ -838,6 +838,8 @@ class SX126x(BaseLoRa) :
         while irqStat == 0x0000 and self._statusIrq == 0x0000 :
             # only check IRQ status register for non interrupt operation
             if self._irq == -1 : irqStat = self.getIrqStatus()
+            if irqStat != 0x0000:
+                break
             # return when timeout reached
             if (time.time() - t) > timeout and timeout > 0 :
                 return False
