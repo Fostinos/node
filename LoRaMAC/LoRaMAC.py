@@ -413,7 +413,12 @@ class LoRaMAC():
         self._LoRa.wait()
         self._logger.info(f"__radio_receive: get modem IRQ status")
         status = self._LoRa.status()
+        if status == self._LoRa.STATUS_DEFAULT:
+            # no IRQ
+            return bytes([])
         if status == self._LoRa.STATUS_TX_DONE:
+            # TX_DONE IRQ
+            self._LoRa.clearStatus()
             self._logger.debug(f"TX  : LoRa {RadioStatus(status)}")
             return bytes([])
         if status != self._LoRa.STATUS_RX_DONE:
@@ -517,6 +522,7 @@ class LoRaMAC():
             if response is None:
                 return False
             if response["FOptsLen"] > 0:
+                self._logger.debug(f"MAC command received")
                 self._Mac.handle_mac_command(response["FOpts"])
             self._device.downlinkMacPayload = response["MacPayload"]
             self._device.Adr = response["ADR"]
