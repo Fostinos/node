@@ -89,6 +89,6 @@ class MacCommand():
                 self.__LinkADRAns(mac_cmd[index:index+4])
                 index = index + 4
             if cid == CID.DevStatus:
-                self._logger.debug(f"Received LinkADRReq Command")
+                self._logger.debug(f"Received DevStatusReq Command")
                 self.__DevStatusAns()
             index = index + 1
