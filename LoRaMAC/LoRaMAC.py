@@ -320,13 +320,21 @@ class LoRaMAC():
             if len(self._device.downlinkPhyPayload) == 0:
                 self._LoRaSemaphore.release()
                 continue
+
+            if self.__rx2_timeout_timer is not None:
+                self.__rx2_timeout_timer.cancel()
+                self.__rx2_timeout_timer = None
+            
+            if self.__rx2_timer is not None:
+                self.__rx2_timer.cancel()
+                self.__radio_rx2_mode()
+                self.__rx2_timer = None
+
             if len(self._device.downlinkPhyPayload) < 10:
                 self._logger.error(f"Downlink PhyPayload")
-                self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
             
-            self.__radio_rx2_mode()
             
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
