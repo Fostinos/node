@@ -316,7 +316,11 @@ class LoRaMAC():
                         self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
                 if not self._device.isJoined: 
                     if self._device.join_max_tries > 0:
+                        self._LoRaSemaphore.release()
                         self.join(self._device.join_max_tries)
+                        if not self._LoRaSemaphore.acquire(timeout=0.5):
+                            time.sleep(0.5)
+                            continue
                     elif callable(self._on_join):
                         self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
