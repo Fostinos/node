@@ -307,6 +307,7 @@ class LoRaMAC():
                     self._device.rx2_window_timeout = time.time() + UPLINK_RX2_DELAY
                 if not self._device.isJoined:
                     self._device.rx2_window_timeout = time.time() + JOIN_RX2_DELAY
+                self._logger.debug(f"Opening RX2 by the stack")
                 self.__radio_rx2_mode()
                 self._LoRaSemaphore.release()
                 continue
