@@ -36,7 +36,7 @@ class MacCommand():
             self.link_adr = LinkADR(3, 21, 0, 1, 1)
         elif region == Region.EU868:
             self.link_adr = LinkADR(3, 14, 0, 1, 1)
-        self.answer:bytearray = None
+        self.answer:bytes = None
         self.battery_level:int = 0  
         self.snr:float = 0
         self.rssi:float = 0
@@ -56,6 +56,7 @@ class MacCommand():
         if self.answer is None:
             self.answer = bytearray([])
         self.answer = self.answer + bytes(LinkADRAns)
+        self.answer = bytes(self.answer)
         self._logger.debug(f"LinkADRAns Response: {self.answer.hex()}")
 
     def __DevStatusAns(self):
@@ -69,6 +70,7 @@ class MacCommand():
         if self.answer is None:
             self.answer = bytearray([])
         self.answer = self.answer + bytes(DevStatusAns)
+        self.answer = bytes(self.answer)
         self._logger.debug(f"DevStatusAns Response: {self.answer.hex()}")
 
     def __DutyCycleAns(self, DutyCycleReq:list)->bytes:

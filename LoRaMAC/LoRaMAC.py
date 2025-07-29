@@ -495,12 +495,12 @@ class LoRaMAC():
             if not confirmed:
                 response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            adr=False, ack=self._device.Ack, fOpts=bytes(self._Mac.answer))
+                                                            adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
             else:
                 self._device.AckDown = False
                 response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            adr=False, ack=self._device.Ack, fOpts=bytes(self._Mac.answer))
+                                                            adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
             db = Database()
             db.open()
             db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
