@@ -256,6 +256,33 @@ class LoRaMAC():
             self._LoRaSemaphore.release()
             return False
     
+    def stack_transmit(self)->bool:
+        self._LoRaSemaphore.acquire()
+        self._device.uplinkMacPayload = bytes([])
+        if not self.__lorawan_data_up(False, 0):
+            self._LoRaSemaphore.release()
+            return False
+        if self._region == Region.EU868:
+            self._channel = random.randint(self._region.value.UPLINK_CHANNEL_MIN, Region.EU868.value.JOIN_CHANNEL_MAX)
+        else:
+            self._channel = self.__random_channel()
+        self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
+        self._logger.info(f"Stack transmits empty payload on fPort 0")
+        self.__radio_tx_mode()
+        tx_time = time.time()
+        if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
+            # Transmit ok
+            self.__radio_rx1_mode()
+            self._device.rx2_window_time = tx_time + UPLINK_RX2_DELAY
+            self._LoRaSemaphore.release()
+            self._Mac.answer = None
+            return True
+        else:
+            # Transmit error
+            self.__radio_rx2_mode()
+            self._LoRaSemaphore.release()
+            return False
+    
     def set_logging_level(self, level:int=logging.INFO):
         """
         Sets the logging level for the `LoRaMAC`.
@@ -351,6 +378,9 @@ class LoRaMAC():
                         self._on_transmit(TransmitStatus.TX_NETWORK_ACK)
                     if len(self._device.downlinkMacPayload) > 0 and callable(self._on_receive):
                         self._on_receive(ReceiveStatus.RX_OK, self._device.downlinkMacPayload)
+                
+                if self._Mac.answer is not None:
+                    self.stack_transmit()
 
 
     def __increment_device_channel_group(self):
@@ -488,17 +518,21 @@ class LoRaMAC():
             return False
 
 
-    def __lorawan_data_up(self, confirmed:bool=False) -> bool:
+    def __lorawan_data_up(self, confirmed:bool=False, fPort:int=None) -> bool:
         try:
             self._device.FCnt = self._device.FCnt + 1
             self._device.confirmed_uplink = confirmed
+            if fPort is None:
+                fPort = self._device.FPort
+            if fPort is None:
+                fPort = 0
             if not confirmed:
-                response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
+                response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, fPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
                                                             adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
             else:
                 self._device.AckDown = False
-                response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
+                response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, fPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
                                                             adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
             db = Database()
