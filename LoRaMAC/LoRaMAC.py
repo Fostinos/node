@@ -418,7 +418,7 @@ class LoRaMAC():
             return bytes([])
         if status == self._LoRa.STATUS_TX_DONE:
             # TX_DONE IRQ
-            self._LoRa.clearStatus()
+            self._LoRa.clearTxDoneStatus()
             self._logger.debug(f"TX  : LoRa {RadioStatus(status)}")
             return bytes([])
         if status != self._LoRa.STATUS_RX_DONE:

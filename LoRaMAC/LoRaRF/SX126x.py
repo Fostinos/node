@@ -890,8 +890,8 @@ class SX126x(BaseLoRa) :
         # return TX or RX wait status
         return self._statusWait
     
-    def clearStatus(self):
-        self.clearIrqStatus(self._statusIrq)
+    def clearTxDoneStatus(self):
+        self.clearIrqStatus(self.IRQ_TX_DONE)
         self._statusIrq = self.STATUS_DEFAULT
 
     def transmitTime(self) -> float :
