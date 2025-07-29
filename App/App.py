@@ -100,7 +100,7 @@ class App():
         self.__gpio = RPi.GPIO
         self.__gpio.setmode(RPi.GPIO.BCM)
         self.__gpio.setwarnings(False)
-        self.__led_error_ts = 0
+        self.__led_error_off_ts = 0
         self.__thread.start()
         self.__logger.info(f"App Initialized")
 
