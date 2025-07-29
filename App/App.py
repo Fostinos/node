@@ -7,6 +7,8 @@ import os
 import json
 import time
 import logging
+import RPi.GPIO
+from threading import Thread
 
 from .Sensors import Relay, DAC5571
 from .Sensors import PCF8574, GPIO, PinState
@@ -61,6 +63,13 @@ class App():
     TYPE_PIN_7                 = 0xF7
     TYPE_READ_PIN_STATES       = 0xF8
 
+    
+    # COMM and ERROR LEDs pins
+    LED_ERROR_PIN              = 20
+    LED_COMM_PIN               = 21
+    LED_COMM_TOGGLE_PERIOD     = 0.02
+    LED_ERROR_ON_DURATION      = 5
+
     def __init__(self, region: Region, level: int = logging.DEBUG) -> None:
         """
         Initializes the App object.
@@ -87,6 +96,12 @@ class App():
         self.__dac1 = DAC5571(address=DAC5571.ADDRESS_DAC_1)
         self.__dac2 = DAC5571(address=DAC5571.ADDRESS_DAC_2)
         self.__adc_channels = [0]*self.__port.TOTAL_PIN
+        self.__thread = Thread(target=self.__led_task, name="App Service", daemon=True)
+        self.__gpio = RPi.GPIO
+        self.__gpio.setmode(RPi.GPIO.BCM)
+        self.__gpio.setwarnings(False)
+        self.__led_error_ts = 0
+        self.__thread.start()
         self.__logger.info(f"App Initialized")
 
         
@@ -162,6 +177,33 @@ class App():
             
             # minimum delay (!important)
             time.sleep(App.DELAY_PER_LOOP)
+
+    def __led_task(self):
+        self.__gpio.setup(App.LED_ERROR_PIN, self.__gpio.OUT)
+        self.__gpio.setup(App.LED_COMM_PIN, self.__gpio.OUT)
+        comm = self.__gpio.LOW
+        while True:
+            if self.__led_error_off_ts > 0 and time.time() > self.__led_error_off_ts:
+                self.__led_error_off()
+            # COMM LED process
+            if not self.__LoRaWAN.is_joined():
+                self.__gpio.output(App.LED_COMM_PIN, self.__gpio.LOW)
+                time.sleep(self.LED_COMM_TOGGLE_PERIOD)
+                continue
+            if comm == self.__gpio.LOW:
+                comm = self.__gpio.HIGH
+            else:
+                comm = self.__gpio.LOW
+            self.__gpio.output(App.LED_COMM_PIN, comm)
+            time.sleep(self.LED_COMM_TOGGLE_PERIOD)
+
+    def __led_error_on(self):
+        self.__led_error_off_ts = time.time() + App.LED_ERROR_ON_DURATION
+        self.__gpio.output(App.LED_ERROR_PIN, self.__gpio.HIGH)
+
+    def __led_error_off(self):
+        self.__led_error_off_ts = 0
+        self.__gpio.output(App.LED_ERROR_PIN, self.__gpio.LOW)
 
     def __read_channels(self):
         for i in range(self.__port.TOTAL_PIN):
@@ -299,6 +341,7 @@ class App():
         else:
             self.__logger.warning(f'CMD_FAILURE')
             self.__LoRaWAN.transmit(bytes([App.CMD_FAILURE]))
+            self.__led_error_on()
         
         if len(response_payload) > 0:
             self.__LoRaWAN.transmit(bytes(response_payload))
@@ -484,6 +527,7 @@ class App():
         if status == JoinStatus.JOIN_OK:
             self.__logger.debug(f"DEVICE : {self.__device.to_dict()}")
         else:
+            self.__led_error_on()
             self.__LoRaWAN.join(max_tries=3, forced=True)
 
     def __on_transmit_callback(self, status: TransmitStatus):
@@ -506,3 +550,5 @@ class App():
         self.__logger.info(f"{status}")
         if status == ReceiveStatus.RX_OK:
             self.__handle_downlink(payload)
+        else:
+            self.__led_error_on()

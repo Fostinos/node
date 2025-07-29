@@ -57,6 +57,7 @@ class Device():
 		self.rx2_window_timeout : float = -1
 		self.message_type = None
 		self.confirmed_uplink = False
+		self.waiting_for_ack = False
 
 
 	def to_dict(self) -> dict:

@@ -8,7 +8,7 @@ from .loramac_command import MacCommand
 from .loramac_settings import *
 from .LoRaRF import SX126x
 
-from threading import Thread, Semaphore
+from threading import Thread, Semaphore, Timer
 import logging
 import random
 import time
@@ -82,6 +82,7 @@ class LoRaMAC():
         self._LoRa = SX126x()
         self._Mac = MacCommand()
         self._LoRaIrqStatus = self._LoRa.STATUS_DEFAULT
+        self.__rx2_timer:Timer = None
         db = Database()
         db.open()
         # Create table if not exists
@@ -195,11 +196,13 @@ class LoRaMAC():
         self._logger.info(f"Joining...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
-        tx_time = time.time()
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = tx_time + JOIN_RX2_DELAY
+            # open RX2 200 ms later
+            rx2_opening_in = (JOIN_RX2_DELAY - JOIN_RX1_DELAY) + 0.2
+            self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
+            self.__rx2_timer.start()
             self._LoRaSemaphore.release()
             return True
         else:
@@ -245,7 +248,10 @@ class LoRaMAC():
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = time.time() + 1.2
+            # open RX2 200 ms later
+            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.2
+            self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
+            self.__rx2_timer.start()
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -261,17 +267,18 @@ class LoRaMAC():
         if not self.__lorawan_data_up(False, 0):
             self._LoRaSemaphore.release()
             return False
-        if self._region == Region.EU868:
-            self._channel = random.randint(self._region.value.UPLINK_CHANNEL_MIN, Region.EU868.value.JOIN_CHANNEL_MAX)
-        else:
-            self._channel = self.__random_channel()
-        self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
-        self._logger.info(f"Stack transmits empty payload on fPort 0")
+
+        self._channel = self.__random_channel()
+        self._spreading_factor = self.__random_spreading_factor()
+        self._logger.info(f"Stack -> internal Tx on fPort 0")
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = time.time() + 1.2
+            # open RX2 200 ms later
+            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.2
+            self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
+            self.__rx2_timer.start()
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -300,21 +307,11 @@ class LoRaMAC():
             if not self._LoRaSemaphore.acquire(timeout=0.5):
                 time.sleep(0.5)
                 continue
-
-            if self._device.rx2_window_time > 0 and time.time() >= self._device.rx2_window_time:
-                self._device.rx2_window_time = -1
-                if self._device.isJoined and self._device.confirmed_uplink:
-                    self._device.rx2_window_timeout = time.time() + UPLINK_RX2_DELAY
-                if not self._device.isJoined:
-                    self._device.rx2_window_timeout = time.time() + JOIN_RX2_DELAY
-                self._logger.debug(f"Opening RX2 by the stack")
-                self.__radio_rx2_mode()
-                self._LoRaSemaphore.release()
-                continue
             
             if self._device.rx2_window_timeout > 0 and time.time() >= self._device.rx2_window_timeout:
                 self._device.rx2_window_timeout = -1
-                if self._device.isJoined and self._device.confirmed_uplink and not self._device.AckDown:
+                if self._device.isJoined and self._device.waiting_for_ack and not self._device.AckDown:
+                    self._device.waiting_for_ack = False
                     if callable(self._on_receive):
                         self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
                 if not self._device.isJoined: 
@@ -347,7 +344,6 @@ class LoRaMAC():
             if self._device.message_type == MessageType.JOIN_ACCEPT:
                 if self._device.isJoined:
                     continue
-                self._device.rx2_window_time = -1
                 self._device.rx2_window_timeout = -1
                 if not self.__lorawan_join_accept():
                     if self._device.join_max_tries > 0:
@@ -361,7 +357,6 @@ class LoRaMAC():
                 self._device.message_type  == MessageType.UNCONFIRMED_DATA_DOWN:
                 if not self._device.isJoined:
                     continue
-                self._device.rx2_window_time = -1
                 self._device.rx2_window_timeout = -1
                 if self._device.message_type == MessageType.CONFIRMED_DATA_DOWN:
                     self._device.Ack = True
@@ -403,6 +398,10 @@ class LoRaMAC():
 
 ############################## API to LoRaRF Library
     def __radio_tx_mode(self):
+        self.__busy_in_tx = True
+        if self.__rx2_timer is not None:
+            self.__rx2_timer.cancel()
+            self.__rx2_timer = None
         self._logger.debug(f"TX  : FREQ = {self._region.uplink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
         self._LoRa.setTxPower(LORA_DEFAULT_TX_POWER, self._LoRa.TX_POWER_SX1262)
@@ -411,6 +410,7 @@ class LoRaMAC():
         self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, UPLINK_CRC_TYPE, UPLINK_IQ_POLARITY)
     
     def __radio_rx1_mode(self):
+        self.__busy_in_tx = False
         self._logger.debug(f"RX1 : FREQ = {self._region.downlink_frequency(self._channel)} Hz, SF = {self._spreading_factor}")
         #self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
         self._LoRa.setSyncWord(LORA_SYNC_WORD)
@@ -419,7 +419,19 @@ class LoRaMAC():
         self._LoRa.setLoRaModulation(self._spreading_factor, self._region.value.DOWNLINK_BANDWIDTH, LORA_CODING_RATE)
         self._LoRa.setLoRaPacket(self._LoRa.HEADER_EXPLICIT, LORA_PREAMBLE_SIZE, LORA_PAYLOAD_MAX_SIZE, DOWNLINK_CRC_TYPE, DOWNLINK_IQ_POLARITY)
         self._LoRa.request(self._LoRa.RX_CONTINUOUS)
-        
+
+    def __radio_rx2_timer_cb(self)-> bool:
+        if self.__busy_in_tx:
+            return
+        if self._device.isJoined and self._device.confirmed_uplink:
+            self._device.confirmed_uplink = False
+            self._device.waiting_for_ack = True
+            self._device.rx2_window_timeout = time.time() + UPLINK_RX2_DELAY
+        if not self._device.isJoined:
+            self._device.rx2_window_timeout = time.time() + JOIN_RX2_DELAY
+        self.__radio_rx2_mode()
+
+
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
         #self._LoRa.purge(LORA_PAYLOAD_MAX_SIZE)
