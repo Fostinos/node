@@ -438,7 +438,7 @@ class LoRaMAC():
         self._LoRa.endPacket()
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
         time.sleep(delay - 0.4)
-        return self._LoRa.wait()
+        return True
 
     def __radio_receive(self, delay:int)-> bytes:
         self._LoRa.wait()
