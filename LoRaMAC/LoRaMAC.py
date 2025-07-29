@@ -434,8 +434,8 @@ class LoRaMAC():
         self._logger.debug(f"RX2 window timeout")
         if self._device.isJoined and self._device.waiting_for_ack and not self._device.AckDown:
             self._device.waiting_for_ack = False
-            if callable(self._on_receive):
-                self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
+            if callable(self._on_transmit):
+                self._on_transmit(TransmitStatus.TX_NETWORK_NO_ACK, bytes([]))
         if not self._device.isJoined: 
             if self._device.join_max_tries > 0:
                 self.join(self._device.join_max_tries)

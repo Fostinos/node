@@ -172,7 +172,7 @@ class App():
                 relay_thresholds = self.__read_relay_thresholds()
                 if relay_thresholds is not None:
                     data = data + relay_thresholds
-                self.__LoRaWAN.transmit(bytes(data))
+                self.__LoRaWAN.transmit(bytes(data), True)
                 time.sleep(1)
             
             # minimum delay (!important)
@@ -538,6 +538,10 @@ class App():
             status (TransmitStatus): The status of the transmit event.
         """
         self.__logger.info(f"{status}")
+        if status in [TransmitStatus.TX_OK, TransmitStatus.TX_NETWORK_ACK] :
+            self.__led_error_off()
+        else:
+            self.__led_error_on()
 
     def __on_receive_callback(self, status: ReceiveStatus, payload: bytes):
         """

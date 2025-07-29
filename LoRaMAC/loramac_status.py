@@ -17,8 +17,9 @@ class TransmitStatus(Enum):
     """
     TX_OK               = 0
     TX_NETWORK_ACK      = 1
-    TX_JOIN_ERROR       = 2
-    TX_PAYLOAD_ERROR    = 3
+    TX_NETWORK_NO_ACK   = 2
+    TX_JOIN_ERROR       = 3
+    TX_PAYLOAD_ERROR    = 4
 
 
 class ReceiveStatus(Enum):
