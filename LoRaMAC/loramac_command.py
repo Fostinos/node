@@ -1,6 +1,7 @@
 
 
 from enum import IntEnum
+from .loramac_region import Region
 import logging
 
 class CID(IntEnum):
@@ -15,15 +16,35 @@ class CID(IntEnum):
     DlChannel     = 0x0A
     DeviceTime    = 0x0B
 
+class LinkADR:
+
+    def __init__(self, dr:int, tx_pwr:int, ch_mask:int, ch_mask_ctrl:int, nb_tx:int):
+        self.data_rate = dr
+        self.tx_power = tx_pwr
+        self.ch_mask = ch_mask
+        self.ch_mask_ctrl = ch_mask_ctrl
+        self.nb_tx = nb_tx
+
+class DutyCycle:
+    pass
+
 
 class MacCommand():
 
-    def __init__(self):
+    def __init__(self, region:Region=Region.US915):
+        if region == Region.US915:
+            self.link_adr = LinkADR(3, 21, 0, 1, 1)
+        elif region == Region.EU868:
+            self.link_adr = LinkADR(3, 14, 0, 1, 1)
         self.answer:bytes = None
+        self._region = region
         self._logger = logging.getLogger("APP[LoRaMAC]")
         pass
         
     def __LinkADRAns(self, LinkADRReq:list):
+        if len(LinkADRReq) != 4:
+            self._logger.debug(f"Incorrect LinkADRReq: {bytes(LinkADRReq).hex()}")
+        # To be implemented for ADR
         PowerACK = 1
         DataRateACK = 1
         ChannelMaskACK = 1
