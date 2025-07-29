@@ -81,6 +81,7 @@ class LoRaMAC():
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         self._LoRa = SX126x()
         self._Mac = MacCommand()
+        self._LoRaIrqStatus = self._LoRa.STATUS_DEFAULT
         db = Database()
         db.open()
         # Create table if not exists
@@ -415,12 +416,16 @@ class LoRaMAC():
         status = self._LoRa.status()
         if status == self._LoRa.STATUS_DEFAULT:
             # no IRQ
+            self._LoRaIrqStatus = self._LoRa.STATUS_DEFAULT
             return bytes([])
         if status == self._LoRa.STATUS_TX_DONE:
             # TX_DONE IRQ
-            self._LoRa.clearTxDoneStatus()
-            self._logger.debug(f"TX  : LoRa {RadioStatus(status)}")
+            if self._LoRaIrqStatus != self._LoRa.STATUS_TX_DONE:
+                self._logger.debug(f"TX  : LoRa {RadioStatus(status)}")
+                # Log is printed once
+                self._LoRaIrqStatus = self._LoRa.STATUS_TX_DONE
             return bytes([])
+        self._LoRaIrqStatus = status
         if status != self._LoRa.STATUS_RX_DONE:
             self._logger.warning(f"RX  : LoRa {RadioStatus(status)}")
             self._LoRa.clearDeviceErrors()
