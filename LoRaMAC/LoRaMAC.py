@@ -244,9 +244,8 @@ class LoRaMAC():
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
-            rx1_time = time.time()
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = rx1_time + 1
+            self._device.rx2_window_time = time.time() + 1.2
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -271,9 +270,8 @@ class LoRaMAC():
         self.__radio_tx_mode()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
-            rx1_time = time.time()
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = rx1_time + 1
+            self._device.rx2_window_time = time.time() + 1.2
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -341,8 +339,7 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
             
-            if self._device.rx2_window_time > -100:
-                self.__radio_rx2_mode()
+            self.__radio_rx2_mode()
             
             self._LoRaSemaphore.release()
             self.__lorawan_message_type()
@@ -437,7 +434,7 @@ class LoRaMAC():
         self._LoRa.write(list(self._device.uplinkPhyPayload), len(self._device.uplinkPhyPayload))
         self._LoRa.endPacket()
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
-        time.sleep(delay - 0.6)
+        time.sleep(delay - 0.4)
         self._LoRa.wait(0.1)
         return True
 
