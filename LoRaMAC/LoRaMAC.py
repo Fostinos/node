@@ -83,6 +83,7 @@ class LoRaMAC():
         self._Mac = MacCommand()
         self._LoRaIrqStatus = self._LoRa.STATUS_DEFAULT
         self.__rx2_timer:Timer = None
+        self.__rx2_timeout_timer:Timer = None
         db = Database()
         db.open()
         # Create table if not exists
@@ -307,22 +308,6 @@ class LoRaMAC():
             if not self._LoRaSemaphore.acquire(timeout=0.5):
                 time.sleep(0.5)
                 continue
-            
-            if self._device.rx2_window_timeout > 0 and time.time() >= self._device.rx2_window_timeout:
-                self._device.rx2_window_timeout = -1
-                if self._device.isJoined and self._device.waiting_for_ack and not self._device.AckDown:
-                    self._device.waiting_for_ack = False
-                    if callable(self._on_receive):
-                        self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
-                if not self._device.isJoined: 
-                    if self._device.join_max_tries > 0:
-                        self._LoRaSemaphore.release()
-                        self.join(self._device.join_max_tries)
-                        if not self._LoRaSemaphore.acquire(timeout=0.5):
-                            time.sleep(0.5)
-                            continue
-                    elif callable(self._on_join):
-                        self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
             time.sleep(0.2)
             self._LoRa.wait(1)
@@ -361,7 +346,6 @@ class LoRaMAC():
                 self._device.message_type  == MessageType.UNCONFIRMED_DATA_DOWN:
                 if not self._device.isJoined:
                     continue
-                self._device.rx2_window_timeout = -1
                 if self._device.message_type == MessageType.CONFIRMED_DATA_DOWN:
                     self._device.Ack = True
                 else:
@@ -428,14 +412,27 @@ class LoRaMAC():
         if self.__busy_in_tx:
             return
         self._logger.debug(f"RX2 timer expires")
+        self.__radio_rx2_mode()
         if self._device.isJoined and self._device.confirmed_uplink:
             self._device.confirmed_uplink = False
             self._device.waiting_for_ack = True
-            self._device.rx2_window_timeout = time.time() + UPLINK_RX2_DELAY
+            self.__rx2_timeout_timer = Timer(UPLINK_RX2_DELAY, self.__rx2_timeout_timer_cb)
+            self.__rx2_timeout_timer.start()
         if not self._device.isJoined:
-            self._device.rx2_window_timeout = time.time() + JOIN_RX2_DELAY
-        self.__radio_rx2_mode()
+            self.__rx2_timeout_timer = Timer(JOIN_RX2_DELAY, self.__rx2_timeout_timer_cb)
+            self.__rx2_timeout_timer.start()
 
+    def __rx2_timeout_timer_cb(self)-> bool:
+        self._logger.debug(f"RX2 window timeout")
+        if self._device.isJoined and self._device.waiting_for_ack and not self._device.AckDown:
+            self._device.waiting_for_ack = False
+            if callable(self._on_receive):
+                self._on_receive(ReceiveStatus.RX_TIMEOUT_ERROR, bytes([]))
+        if not self._device.isJoined: 
+            if self._device.join_max_tries > 0:
+                self.join(self._device.join_max_tries)
+            elif callable(self._on_join):
+                self._on_join(JoinStatus.JOIN_MAX_TRY_ERROR)
 
     def __radio_rx2_mode(self)-> bool:
         self._logger.debug(f"RX2 : FREQ = {self._region.value.RX2_FREQUENCY} Hz, SF = {self._region.value.RX2_SPREADING_FACTOR}")
