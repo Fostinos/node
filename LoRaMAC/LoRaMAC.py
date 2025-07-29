@@ -437,7 +437,7 @@ class LoRaMAC():
         self._LoRa.write(list(self._device.uplinkPhyPayload), len(self._device.uplinkPhyPayload))
         self._LoRa.endPacket()
         self._logger.debug(f"UP  : PHYPAYLOAD = {self._device.uplinkPhyPayload.hex()}")
-        time.sleep(delay - 0.4)
+        time.sleep(delay - 0.6)
         self._LoRa.wait(0.1)
         return True
 

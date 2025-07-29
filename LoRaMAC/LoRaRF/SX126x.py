@@ -843,7 +843,10 @@ class SX126x(BaseLoRa) :
             # return when timeout reached
             if (time.time() - t) > timeout and timeout > 0 :
                 return False
-            time.sleep(0.5)
+            if timeout > 0.5:
+                time.sleep(0.5)
+            else:
+                time.sleep(0.05)
 
         if self._statusIrq :
             # immediately return when interrupt signal hit
