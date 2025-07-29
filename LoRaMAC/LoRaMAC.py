@@ -435,7 +435,7 @@ class LoRaMAC():
         if self._device.isJoined and self._device.waiting_for_ack and not self._device.AckDown:
             self._device.waiting_for_ack = False
             if callable(self._on_transmit):
-                self._on_transmit(TransmitStatus.TX_NETWORK_NO_ACK, bytes([]))
+                self._on_transmit(TransmitStatus.TX_NETWORK_NO_ACK)
         if not self._device.isJoined: 
             if self._device.join_max_tries > 0:
                 self.join(self._device.join_max_tries)
