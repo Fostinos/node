@@ -430,6 +430,8 @@ class LoRaMAC():
             self._LoRa.clearDeviceErrors()
             self._LoRa.purge(self._LoRa.available())
             return bytes([])
+        self._Mac.snr = self._LoRa.snr()
+        self._Mac.rssi = self._LoRa.packetRssi()
         rx_length = self._LoRa.available()
         rx_bytes = self._LoRa.get(rx_length)
         self._logger.info(f"Rx bytes[{rx_length}]: {rx_bytes.hex()}")
@@ -493,12 +495,12 @@ class LoRaMAC():
             if not confirmed:
                 response =  WrapperLoRaMAC.unconfirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
+                                                            adr=False, ack=self._device.Ack, fOpts=bytes(self._Mac.answer))
             else:
                 self._device.AckDown = False
                 response =  WrapperLoRaMAC.confirmed_data_up(self._device.uplinkMacPayload, self._device.FCnt, self._device.FPort, 
                                                             self._device.DevAddr, self._device.NwkSKey,self._device.AppSKey,
-                                                            adr=False, ack=self._device.Ack, fOpts=self._Mac.answer)
+                                                            adr=False, ack=self._device.Ack, fOpts=bytes(self._Mac.answer))
             db = Database()
             db.open()
             db.update_f_cnt(self._device.DevEUI.hex(), self._device.FCnt)
