@@ -1,6 +1,7 @@
 
 
 from enum import IntEnum
+import logging
 
 class CID(IntEnum):
     LinkCheck     = 0x02
@@ -19,6 +20,7 @@ class MacCommand():
 
     def __init__(self):
         self.answer:bytes = None
+        self._logger = logging.getLogger("APP[LoRaMAC]")
         pass
         
     def __LinkADRAns(self, LinkADRReq:list):
@@ -28,6 +30,7 @@ class MacCommand():
         LinkADRAns = [CID.LinkADR]
         LinkADRAns.append(0x00 | (PowerACK << 2) | (DataRateACK << 1) | (ChannelMaskACK << 0))
         self.answer = bytes(LinkADRAns)
+        self._logger.debug(f"LinkADRAns Response: {self.answer.hex()}")
 
     def __DutyCycleAns(self, DutyCycleReq:list)->bytes:
         pass
@@ -37,9 +40,11 @@ class MacCommand():
         index = 0
         cid = 0
         size = len(mac_cmd)
+        self._logger.info(f"MAC cmd[{size}] = {fOpts.hex()}")
         while index < size:
             cid = mac_cmd[index]
             if cid == CID.LinkADR:
+                self._logger.debug(f"Received LinkADRReq Command")
                 self.__LinkADRAns(mac_cmd[index:index+4])
                 index = index + 4
             index = index + 1
