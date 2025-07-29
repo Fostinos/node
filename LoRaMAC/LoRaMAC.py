@@ -199,8 +199,8 @@ class LoRaMAC():
         if self.__radio_transmit(delay=JOIN_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            # open RX2 200 ms later
-            rx2_opening_in = (JOIN_RX2_DELAY - JOIN_RX1_DELAY) + 0.2
+            # open RX2 600 ms later
+            rx2_opening_in = (JOIN_RX2_DELAY - JOIN_RX1_DELAY) + 0.6
             self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
             self.__rx2_timer.start()
             self._LoRaSemaphore.release()
@@ -248,8 +248,8 @@ class LoRaMAC():
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            # open RX2 200 ms later
-            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.2
+            # open RX2 600 ms later
+            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.6
             self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
             self.__rx2_timer.start()
             self._LoRaSemaphore.release()
@@ -275,8 +275,8 @@ class LoRaMAC():
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
             self.__radio_rx1_mode()
-            # open RX2 200 ms later
-            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.2
+            # open RX2 600 ms later
+            rx2_opening_in = (UPLINK_RX2_DELAY - UPLINK_RX1_DELAY) + 0.6
             self.__rx2_timer = Timer(rx2_opening_in, self.__radio_rx2_timer_cb)
             self.__rx2_timer.start()
             self._LoRaSemaphore.release()
@@ -423,6 +423,7 @@ class LoRaMAC():
     def __radio_rx2_timer_cb(self)-> bool:
         if self.__busy_in_tx:
             return
+        self._logger.debug(f"RX2 timer expires")
         if self._device.isJoined and self._device.confirmed_uplink:
             self._device.confirmed_uplink = False
             self._device.waiting_for_ack = True
