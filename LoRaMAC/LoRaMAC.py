@@ -242,11 +242,11 @@ class LoRaMAC():
         self._logger.info(f"Transmitting...")
         self._LoRaSemaphore.acquire()
         self.__radio_tx_mode()
-        tx_time = time.time()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
+            rx1_time = time.time()
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = tx_time + UPLINK_RX2_DELAY
+            self._device.rx2_window_time = rx1_time + 1
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -269,11 +269,11 @@ class LoRaMAC():
         self._spreading_factor = self._region.value.SPREADING_FACTOR_MAX
         self._logger.info(f"Stack transmits empty payload on fPort 0")
         self.__radio_tx_mode()
-        tx_time = time.time()
         if self.__radio_transmit(delay=UPLINK_RX1_DELAY):
             # Transmit ok
+            rx1_time = time.time()
             self.__radio_rx1_mode()
-            self._device.rx2_window_time = tx_time + UPLINK_RX2_DELAY
+            self._device.rx2_window_time = rx1_time + 1
             self._LoRaSemaphore.release()
             self._Mac.answer = None
             return True
@@ -341,7 +341,7 @@ class LoRaMAC():
                 self._LoRaSemaphore.release()
                 continue
             
-            if self._device.rx2_window_time > 0:
+            if self._device.rx2_window_time > -100:
                 self.__radio_rx2_mode()
             
             self._LoRaSemaphore.release()
