@@ -72,7 +72,7 @@ import smbus
 
 
 class ADS1115():
-    
+	
 	ADC_RESOLUTION = 32767.0
 	GAIN = 4.096
 
@@ -140,10 +140,12 @@ class ADS1115():
 
 
 class Relay():
-
+	
+	ADDRESS_RELAY_1 = 0x48
+	ADDRESS_RELAY_2 = 0x49
 	ADC_FACTOR = 3.025
 	
-	def __init__(self, address:int=0x49):
+	def __init__(self, address):
 		self.__adc = ADS1115(address=address)
 		self.__address = address
 	
@@ -159,22 +161,3 @@ class Relay():
 		return self.__adc.read_channel(channel) * Relay.ADC_FACTOR
 	
 
-
-class Banana():
-
-	ADC_FACTOR = 3.025
-	
-	def __init__(self, address:int=0x48):
-		self.__adc = ADS1115(address=address)
-		self.__address = address
-	
-
-	def read_voltage(self, channel:int)->float:
-		"""
-		Reads the voltage from a specific channel of the banana.
-		Args:
-			channel (int): The channel to read (0-3).
-		Returns: 
-			float: The voltage read from the specified channel.
-		"""
-		return self.__adc.read_channel(channel) * Banana.ADC_FACTOR

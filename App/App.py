@@ -42,7 +42,6 @@ class App():
 
     TYPE_TIMESTAMP             = 0x00
     TYPE_RELAY                 = 0x01
-    TYPE_BANANA                = 0x02
 
     TYPE_DAC_1                 = 0xA1
     TYPE_DAC_2                 = 0xA2
@@ -82,8 +81,8 @@ class App():
         self.__LoRaWAN.set_callback(self.__on_join_callback, self.__on_transmit_callback, self.__on_receive_callback)
         self.__last_rejoin_timestamp = 0
         self.__last_transmit_timestamp = 0
-        self.__relay = Relay()
-        self.__banana = Banana()
+        self.__relay1 = Relay(address=Relay.ADDRESS_RELAY_1)
+        self.__relay2 = Relay(address=Relay.ADDRESS_RELAY_2)
         self.__port = PCF8574()
         self.__dac1 = DAC5571(address=DAC5571.ADDRESS_DAC_1)
         self.__dac2 = DAC5571(address=DAC5571.ADDRESS_DAC_2)
@@ -92,11 +91,31 @@ class App():
 
         
         self.__handlers = {
-            App.TYPE_UPLINK_INTERVAL: self.__handle_downlink_uplink_interval,
-            App.TYPE_RELAY_CONTROL: self.__handle_downlink_relay_control,
-            App.TYPE_RELAY_THRESHOLDS: self.__handle_downlink_relay_thresholds,
-            App.TYPE_DAC_1: self.__handle_downlink_dac_1,
-            App.TYPE_DAC_2: self.__handle_downlink_dac_2,
+            App.TYPE_UPLINK_INTERVAL: {
+                "data_size": 4,
+                "handler": self.__handle_downlink_uplink_interval,
+                "response": None
+            },
+            App.TYPE_RELAY_CONTROL:{
+                "data_size": 1,
+                "handler": self.__handle_downlink_relay_control,
+                "response": None
+            },
+            App.TYPE_RELAY_THRESHOLDS: {
+                "data_size": 16,
+                "handler": self.__handle_downlink_config_relay_thresholds,
+                "response": self.__read_relay_thresholds
+            },
+            App.TYPE_DAC_1:  {
+                "data_size": 2,
+                "handler": self.__handle_downlink_dac_1,
+                "response": None
+            },
+            App.TYPE_DAC_2:  {
+                "data_size": 2,
+                "handler": self.__handle_downlink_dac_2,
+                "response": None
+            },
         }
 
     def run(self):
@@ -126,14 +145,15 @@ class App():
                 self.__last_transmit_timestamp = time.time()
                 self.__logger.info("The device transmits data")
                 data = bytearray([App.APP_CHANNEL, App.TYPE_TIMESTAMP])
-                data = data + int(self.__last_transmit_timestamp).to_bytes(4)
-                index = 0
-                data = data + bytearray([App.APP_CHANNEL, App.TYPE_BANANA])
-                for channel in self.__adc_channels:
-                    data = data + int(channel * App.VOLTAGE_RESOLUTION).to_bytes(4)
-                    index = index + 1
-                    if index == 4:
-                        data = data + bytearray([App.APP_CHANNEL, App.TYPE_RELAY])
+                data = data + int(self.__last_transmit_timestamp).to_bytes(4, byteorder='big', signed=False)
+                data = data + bytearray([App.APP_CHANNEL, App.TYPE_RELAY])
+                for voltage in self.__adc_channels:
+                    data = data + int(voltage * App.VOLTAGE_RESOLUTION).to_bytes(2, byteorder='big', signed=False)
+                pin_states_data = self.__read_pin_states_from_sensor()
+                if pin_states_data is None:
+                    pin_states_data = self.__read_pin_states_from_driver()
+                if pin_states_data is not None:
+                    data = data + pin_states_data
                 self.__LoRaWAN.transmit(bytes(data))
                 time.sleep(1)
             
@@ -143,9 +163,9 @@ class App():
     def __read_channels(self):
         for i in range(self.__port.TOTAL_PIN):
             if i < 4:
-                self.__adc_channels[i] = self.__banana.read_voltage(i%4)
+                self.__adc_channels[i] = self.__relay1.read_voltage(i%4)
             else:
-                self.__adc_channels[i] = self.__relay.read_voltage(i%4)
+                self.__adc_channels[i] = self.__relay2.read_voltage(i%4)
 
     def __auto_processing(self):
         if not self.__config[CONFIG_NAME][RELAY_CONTROL_NAME]:
@@ -196,36 +216,79 @@ class App():
         cmd_type = 0xFF
         cmd_state = False
         cmd_response = None
+        response_payload = bytearray([])
         while index < size:
+            
+            if index + 1 >= size:
+                break # Not enough bytes left for CHANNEL and TYPE
+
             if cmd[index] != App.APP_CHANNEL:
                 index = index + 1
+                # Skip unknown channel
                 continue
+
             index = index + 1
+            if index >= size:
+                break  # No TYPE byte
             cmd_type = cmd[index]
             index = index + 1
+
+            cmd_response = None
             if cmd_type in self.__handlers:
-                cmd_state = self.__handlers[cmd_type](cmd, index)
+                cmd_config = self.__handlers[cmd_type]
+                if cmd_config is None:
+                    break
+                cmd_data_size = cmd_config.get("data_size", None)
+                if cmd_data_size is None:
+                    break
+                cmd_handler = cmd_config.get("handler", None)
+                if cmd_handler is None or not callable(cmd_handler):
+                    break
+                if index + cmd_data_size > size:
+                    break  # Not enough data for this command
+                # Execute the cmd
+                cmd_state = cmd_handler(cmd, index)
                 if cmd_state is False:
                     break
+                # Go to the next cmd
+                index = index + cmd_data_size
+                cmd_response_cb = cmd_config.get("response", None)
+                if cmd_response is not None and callable(cmd_response_cb):
+                    cmd_response = cmd_response_cb()
+                if cmd_response is not None:
+                    response_payload = response_payload + cmd_response
+
+
+            
             elif cmd_type >= App.TYPE_PIN_0 and cmd_type <= App.TYPE_PIN_7:
                 pin_not_verified = cmd_type - App.TYPE_PIN_0
                 cmd_state = self.__handle_downlink_write_pin_state(cmd, index, pin_not_verified)
                 if cmd_state is False:
                     break
+                # Go to the next cmd
+                index = index + 1
+            
             elif cmd_type == App.TYPE_READ_PIN_STATES:
                 cmd_response = self.__handle_downlink_read_pin_states()
                 if cmd_response is None:
                     cmd_state = False
                     break
-                else:
-                    cmd_state = True
+                
+                cmd_state = True
+                response_payload = response_payload + cmd_response
+                # Go to the next cmd
+                index = index + 1
+            
             elif cmd_type == App.TYPE_READ_RELAY_THRESHOLDS:
                 cmd_response = self.__handle_downlink_read_relay_thresholds()
                 if cmd_response is None:
                     cmd_state = False
                     break
-                else:
-                    cmd_state = True
+                
+                cmd_state = True
+                response_payload = response_payload + cmd_response
+                # Go to the next cmd
+                index = index + 1
         
         if cmd_state is True:
             self.__logger.info(f'CMD_SUCCESS')
@@ -234,18 +297,24 @@ class App():
             self.__logger.warning(f'CMD_FAILURE')
             self.__LoRaWAN.transmit(bytes([App.CMD_FAILURE]))
         
-        if cmd_response is not None:
-            self.__LoRaWAN.transmit(bytes(cmd_response))
+        if len(response_payload) > 0:
+            self.__LoRaWAN.transmit(bytes(response_payload))
 
-    def __get_integer_from_command(self, cmd:list, index:int)->int:
+    def __get_uint32_from_command(self, cmd:list, index:int)->int:
             if index + 3 >= len(cmd): 
                 return None
             integer_bytes = bytes([cmd[index], cmd[index+1], cmd[index+2], cmd[index+3]])
             return int.from_bytes(integer_bytes)
+    
+    def __get_uint16_from_command(self, cmd:list, index:int)->int:
+            if index + 1 >= len(cmd): 
+                return None
+            integer_bytes = bytes([cmd[index], cmd[index+1]])
+            return int.from_bytes(integer_bytes)
 
     def __handle_downlink_uplink_interval(self, cmd:list, index:int)->bool:
         try:
-            interval = self.__get_integer_from_command(cmd, index)
+            interval = self.__get_uint32_from_command(cmd, index)
             if interval is None: 
                 return False
             old_interval = self.__config[CONFIG_NAME][UPLINK_INTERVAL_NAME]
@@ -279,12 +348,12 @@ class App():
         except:
             return False
     
-    def __handle_downlink_relay_thresholds(self, cmd:list, index:int)->bool:
+    def __handle_downlink_config_relay_thresholds(self, cmd:list, index:int)->bool:
         try:
             thresholds = []
             for i in range(self.__port.TOTAL_PIN):
-                integer = self.__get_integer_from_command(cmd, index)
-                index = index + 4
+                integer = self.__get_uint16_from_command(cmd, index)
+                index = index + 2
                 if integer is None:
                     return False
                 thresholds.append(float(integer) / App.VOLTAGE_RESOLUTION)
@@ -300,7 +369,7 @@ class App():
     
     def __handle_downlink_dac_1(self, cmd:list, index:int)->bool:
         try:
-            integer = self.__get_integer_from_command(cmd, index)
+            integer = self.__get_uint16_from_command(cmd, index)
             if integer is None: 
                 return False
             dac_value = float(integer) / App.VOLTAGE_RESOLUTION
@@ -310,7 +379,7 @@ class App():
     
     def __handle_downlink_dac_2(self, cmd:list, index:int)->bool:
         try:
-            integer = self.__get_integer_from_command(cmd, index)
+            integer = self.__get_uint16_from_command(cmd, index)
             if integer is None: 
                 return False
             dac_value = float(integer) / App.VOLTAGE_RESOLUTION
@@ -335,26 +404,69 @@ class App():
         
     def __handle_downlink_read_pin_states(self)->bytes:
         try:
-            data = bytearray([App.APP_CHANNEL, App.TYPE_READ_PIN_STATES])
-            for i in range(self.__port.TOTAL_PIN):
-                pin = GPIO(i)
-                state = self.__port.read(pin)
-                data = data + bytearray([state])
-            return bytes(data)
+            data = self.__read_pin_states_from_sensor()
+            if data is not None:
+                return data
+            return self.__read_pin_states_from_driver()
         except:
             return None
         
         
     def __handle_downlink_read_relay_thresholds(self)->bytes:
+        return self.__read_relay_thresholds()
+        
+    def __read_relay_thresholds(self)->bytes:
         try:
             data = bytearray([App.APP_CHANNEL, App.TYPE_READ_RELAY_THRESHOLDS])
             thresholds = list(self.__config[CONFIG_NAME][RELAY_THRESHOLD_NAME])
             for threshold in thresholds:
-                data = data + int(threshold * App.VOLTAGE_RESOLUTION).to_bytes(4)
+                data = data + int(threshold * App.VOLTAGE_RESOLUTION).to_bytes(2, byteorder='big', signed=False)
             return bytes(data)
         except:
             return None
 
+
+    def __read_pin_states_from_sensor(self)->bytes:
+        """
+        Reads digital pin states from the sensor and formats them for uplink transmission.
+
+        Returns:
+            bytes: Formatted bytes for uplink (channel, type, 8 pin states)
+            None: If an error occurs or no pin states are available
+        """
+        try:
+            data = bytearray([App.APP_CHANNEL, App.TYPE_READ_PIN_STATES])
+            pin_states = self.__port.get_pin_states_from_sensor()
+            if len(pin_states) == 0:
+                return None
+            pins_data = []
+            for pin_state in pin_states:
+                pins_data.append(pin_state.value)
+            data = data + bytearray(pins_data)
+            return bytes(data)
+        except:
+            return None
+
+    def __read_pin_states_from_driver(self)->bytes:
+        """
+        Reads digital pin states from the internal driver and formats them for uplink transmission.
+
+        Returns:
+            bytes: Formatted bytes for uplink (channel, type, 8 pin states)
+            None: If an error occurs or no pin states are available
+        """
+        try:
+            data = bytearray([App.APP_CHANNEL, App.TYPE_READ_PIN_STATES])
+            pin_states = self.__port.get_pin_states_from_driver()
+            if len(pin_states) == 0:
+                return None
+            pins_data = []
+            for pin_state in pin_states:
+                pins_data.append(pin_state.value)
+            data = data + bytearray(pins_data)
+            return bytes(data)
+        except:
+            return None
 
 ########################## Callback functions
 

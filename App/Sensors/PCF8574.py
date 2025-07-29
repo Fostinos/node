@@ -77,7 +77,8 @@ class PCF8574():
 	
 	def get_pin_states_from_driver(self)->list[PinState]:
 		"""
-		Reads the state of all pins from the PCF8574 driver.
+		Reads the state of all pins from the PCF8574 internal driver.\n
+		Please use it with caution: recommended method `get_pin_states_from_sensor()` 
 		Returns:
 			list[PinState]: A list of PinState representing the state of each pin, empty list if an error occurs.
 		"""
