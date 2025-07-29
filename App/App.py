@@ -8,7 +8,7 @@ import json
 import time
 import logging
 
-from .Sensors import Relay, Banana, DAC5571
+from .Sensors import Relay, DAC5571
 from .Sensors import PCF8574, GPIO, PinState
 
 CONFIG_NAME          = "config"
