@@ -154,6 +154,9 @@ class App():
                     pin_states_data = self.__read_pin_states_from_driver()
                 if pin_states_data is not None:
                     data = data + pin_states_data
+                relay_thresholds = self.__read_relay_thresholds()
+                if relay_thresholds is not None:
+                    data = data + relay_thresholds
                 self.__LoRaWAN.transmit(bytes(data))
                 time.sleep(1)
             

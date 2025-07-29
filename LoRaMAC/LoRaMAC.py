@@ -413,6 +413,9 @@ class LoRaMAC():
         self._LoRa.wait()
         self._logger.info(f"__radio_receive: get modem IRQ status")
         status = self._LoRa.status()
+        if status == self._LoRa.STATUS_TX_DONE:
+            self._logger.debug(f"TX  : LoRa {RadioStatus(status)}")
+            return bytes([])
         if status != self._LoRa.STATUS_RX_DONE:
             self._logger.warning(f"RX  : LoRa {RadioStatus(status)}")
             self._LoRa.clearDeviceErrors()
