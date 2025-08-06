@@ -298,7 +298,7 @@ class App():
                 # Go to the next cmd
                 index = index + cmd_data_size
                 cmd_response_cb = cmd_config.get("response", None)
-                if cmd_response is not None and callable(cmd_response_cb):
+                if cmd_response_cb is not None and callable(cmd_response_cb):
                     cmd_response = cmd_response_cb()
                 if cmd_response is not None:
                     response_payload = response_payload + cmd_response
