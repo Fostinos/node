@@ -33,7 +33,7 @@ class US915():
     UPLINK_BANDWIDTH             = 125000          # 125 khz
     DOWNLINK_BANDWIDTH           = 500000          # 500 khz
     SPREADING_FACTOR_MIN         = 7
-    SPREADING_FACTOR_MAX         = 10
+    SPREADING_FACTOR_MAX         = 8               # only SF7 and SF8 for uplinks
     UPLINK_CHANNEL_MIN           = 0
     UPLINK_CHANNEL_MAX           = 63
 
