@@ -290,14 +290,16 @@ class SX126x(BaseLoRa) :
 
 ### COMMON OPERATIONAL METHODS ###
 
-    def begin(self, bus: int = _bus, cs: int = _cs, reset: int = _reset, busy: int = _busy, irq: int = _irq, txen: int = _txen, rxen: int = _rxen, wake: int = _wake) :
+    def begin(self, bus: int = _bus, cs: int = _cs, reset: int = _reset, busy: int = _busy, irq: int = _irq, txen: int = _txen, rxen: int = _rxen, wake: int = _wake, dio2_as_rf_switch_ctrl: bool = True) :
 
         self._logger = logging.getLogger("DRIVER[SX126x]")
         # set spi and gpio pins
         self.setSpi(bus, cs)
         self.setPins(reset, busy, irq, txen, rxen, wake)
         # perform device reset
-        self.reset()
+        if not self.reset():
+            self._logger.error("Device reset failed")
+            return False
 
         # check if device connect and set modem to LoRa
         self.setStandby(self.STANDBY_RC)
@@ -306,6 +308,15 @@ class SX126x(BaseLoRa) :
             return False
         self.setPacketType(self.LORA_MODEM)
         self._fixResistanceAntenna()
+
+        # set dio2 as rf switch control
+        if dio2_as_rf_switch_ctrl:
+            self.setDio2RfSwitch(True)
+        
+        if self.busyCheck():
+            self._logger.error("RF Switch failed")
+            return False
+        
         return True
 
     def end(self) :
